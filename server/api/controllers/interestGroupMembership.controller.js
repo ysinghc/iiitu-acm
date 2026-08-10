@@ -1,13 +1,17 @@
+const mongoose = require('mongoose');
 const InterestGroupMembership = require('../models/interestGroupMembership.model');
 
 const MembershipController = {
   // GET /api/public/interest-groups/:igId/members
   getMembersOfGroup: async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.igId)) {
+      return res.status(400).json({ error: 'Invalid interest group ID format' });
+    }
     try {
       const memberships = await InterestGroupMembership.find({ interestGroup: req.params.igId })
         .populate('member', 'name email batch role imageUrl')
         .sort({ joinedAt: 1 });
-      res.json(memberships.map(m => m.member));
+      res.json(memberships.map(m => m.member).filter(Boolean));
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -16,6 +20,9 @@ const MembershipController = {
   // POST /api/admin/interest-groups/:igId/members  { memberId }
   addMember: async (req, res) => {
     const { memberId } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(req.params.igId) || !mongoose.Types.ObjectId.isValid(memberId)) {
+      return res.status(400).json({ error: 'Invalid group or member ID format' });
+    }
     try {
       const membership = await InterestGroupMembership.create({
         interestGroup: req.params.igId,
@@ -33,6 +40,9 @@ const MembershipController = {
 
   // DELETE /api/admin/interest-groups/:igId/members/:memberId
   removeMember: async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.igId) || !mongoose.Types.ObjectId.isValid(req.params.memberId)) {
+      return res.status(400).json({ error: 'Invalid group or member ID format' });
+    }
     try {
       const result = await InterestGroupMembership.findOneAndDelete({
         interestGroup: req.params.igId,
@@ -47,10 +57,13 @@ const MembershipController = {
 
   // GET /api/public/members/:memberId/interest-groups  (for member profile use)
   getGroupsOfMember: async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.memberId)) {
+      return res.status(400).json({ error: 'Invalid member ID format' });
+    }
     try {
       const memberships = await InterestGroupMembership.find({ member: req.params.memberId })
         .populate({ path: 'interestGroup', populate: { path: 'department', select: 'slug name' } });
-      res.json(memberships.map(m => m.interestGroup));
+      res.json(memberships.map(m => m.interestGroup).filter(Boolean));
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

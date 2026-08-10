@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const InterestGroup = require('../models/interestGroup.model');
 const InterestGroupMembership = require('../models/interestGroupMembership.model');
 
@@ -17,6 +18,9 @@ const InterestGroupController = {
 
   // GET /api/public/interest-groups/by-department/:departmentId
   getByDepartment: async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.departmentId)) {
+      return res.status(400).json({ error: 'Invalid department ID format' });
+    }
     try {
       const groups = await InterestGroup.find({ department: req.params.departmentId })
         .populate('igl', 'name role imageUrl github linkedin research')
@@ -29,6 +33,9 @@ const InterestGroupController = {
 
   // GET /api/public/interest-groups/:id
   getById: async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid interest group ID format' });
+    }
     try {
       const group = await InterestGroup.findById(req.params.id)
         .populate('department', 'slug name')
@@ -57,6 +64,9 @@ const InterestGroupController = {
 
   // PUT /api/admin/interest-groups/:id
   update: async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid interest group ID format' });
+    }
     const { department, igl, name, description, areaOfInterest, order } = req.body;
     try {
       const group = await InterestGroup.findByIdAndUpdate(
@@ -76,6 +86,9 @@ const InterestGroupController = {
 
   // DELETE /api/admin/interest-groups/:id
   delete: async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid interest group ID format' });
+    }
     try {
       const group = await InterestGroup.findByIdAndDelete(req.params.id);
       if (!group) return res.status(404).json({ message: 'Interest group not found' });

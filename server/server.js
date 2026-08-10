@@ -10,6 +10,8 @@ const Admin = require('./api/models/admin.model');
 const CarouselSlide = require('./api/models/carousel.model');
 const Message = require('./api/models/message.model');
 
+const path = require('path');
+
 // Routes
 const adminRoutes = require('./api/routes/admin.routes');
 const carouselRoutes = require('./api/routes/carousel.routes');
@@ -18,6 +20,7 @@ const teamRoutes = require('./api/routes/team.routes');
 const memberRoutes = require('./api/routes/member.routes');
 const departmentRoutes = require('./api/routes/department.routes');
 const interestGroupRoutes = require('./api/routes/interestGroup.routes');
+const uploadRoutes = require('./api/routes/upload.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -35,6 +38,9 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Static uploads directory serving
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware to ensure DB connection on serverless requests
 app.use(async (req, res, next) => {
@@ -55,18 +61,20 @@ app.use(teamRoutes);
 app.use(memberRoutes);
 app.use(departmentRoutes);
 app.use(interestGroupRoutes);
+app.use(uploadRoutes);
 
 // Seed default admin if none exists
 async function seedDefaultAdmin() {
   try {
     const adminCount = await Admin.countDocuments();
     if (adminCount === 0) {
-      const hashedPassword = await bcrypt.hash('admin123', 10);
+      const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'chairperson_acm_2026!';
+      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
       await Admin.create({
-        username: 'admin',
+        username: 'chairperson@acmiiitu.in',
         password: hashedPassword
       });
-      console.log('Default admin seeded (admin/admin123)');
+      console.log('Default admin seeded (chairperson@acmiiitu.in)');
     }
   } catch (err) {
     console.error('Error seeding default admin:', err);

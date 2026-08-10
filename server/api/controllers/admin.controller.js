@@ -6,8 +6,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_acm_key_123';
 const AdminController = {
   login: async (req, res) => {
     const { username, password } = req.body;
+    if (typeof username !== 'string' || typeof password !== 'string' || !username.trim() || !password) {
+      return res.status(400).json({ message: 'Invalid username or password format' });
+    }
     try {
-      const admin = await Admin.findOne({ username });
+      const admin = await Admin.findOne({ username: username.trim() });
       if (!admin) {
         return res.status(401).json({ message: 'Invalid username or password' });
       }

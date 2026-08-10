@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const TeamMember = require('../models/team.model');
 
 const TeamController = {
@@ -21,6 +22,9 @@ const TeamController = {
   },
 
   updateTeamMember: async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid team member ID format' });
+    }
     const { name, role, imageUrl, github, linkedin, research } = req.body;
     try {
       const teamMember = await TeamMember.findByIdAndUpdate(
@@ -36,6 +40,9 @@ const TeamController = {
   },
 
   deleteTeamMember: async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid team member ID format' });
+    }
     try {
       const teamMember = await TeamMember.findByIdAndDelete(req.params.id);
       if (!teamMember) return res.status(404).json({ message: 'Team member not found' });

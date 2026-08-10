@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Department = require('../models/department.model');
 const InterestGroup = require('../models/interestGroup.model');
 
@@ -42,6 +43,9 @@ const DepartmentController = {
 
   // PUT /api/admin/departments/:id
   update: async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid department ID format' });
+    }
     const { slug, name, description, bannerImageUrl, mission } = req.body;
     try {
       const department = await Department.findByIdAndUpdate(
@@ -58,6 +62,9 @@ const DepartmentController = {
 
   // DELETE /api/admin/departments/:id
   delete: async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid department ID format' });
+    }
     try {
       const department = await Department.findByIdAndDelete(req.params.id);
       if (!department) return res.status(404).json({ message: 'Department not found' });

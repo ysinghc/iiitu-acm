@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const CarouselSlide = require('../models/carousel.model');
 
 const CarouselController = {
@@ -21,6 +22,9 @@ const CarouselController = {
   },
 
   updateSlide: async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid slide ID format' });
+    }
     const { imageUrl, title, description, order } = req.body;
     try {
       const slide = await CarouselSlide.findByIdAndUpdate(
@@ -36,6 +40,9 @@ const CarouselController = {
   },
 
   deleteSlide: async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid slide ID format' });
+    }
     try {
       const slide = await CarouselSlide.findByIdAndDelete(req.params.id);
       if (!slide) return res.status(404).json({ message: 'Slide not found' });

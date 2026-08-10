@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, LogOut, Check, X, ShieldAlert } from 'lucide-react';
 import { API } from '../utils/apiURL';
+import ImageUploader from '../components/ImageUploader';
 
 export default function AdminDashboard({ theme, toggleTheme }) {
   const [activeTab, setActiveTab] = useState('carousel');
@@ -34,7 +35,7 @@ export default function AdminDashboard({ theme, toggleTheme }) {
   // Team Form
   const [teamForm, setTeamForm] = useState({ name: '', role: '', imageUrl: '', github: '', linkedin: '', research: '' });
   // Member Form
-  const [memberForm, setMemberForm] = useState({ name: '', role: 'Member', email: '', batch: '' });
+  const [memberForm, setMemberForm] = useState({ name: '', role: 'Member', email: '', batch: '', imageUrl: '' });
   // Department Form
   const [deptForm, setDeptForm] = useState({ slug: '', name: '', description: '', bannerImageUrl: '', mission: '' });
   // Interest Group Form
@@ -304,7 +305,7 @@ export default function AdminDashboard({ theme, toggleTheme }) {
         body: JSON.stringify(memberForm)
       });
       if (res.ok) {
-        setMemberForm({ name: '', role: 'Member', email: '', batch: '' });
+        setMemberForm({ name: '', role: 'Member', email: '', batch: '', imageUrl: '' });
         setEditId(null);
         refreshData('members');
       }
@@ -437,17 +438,12 @@ export default function AdminDashboard({ theme, toggleTheme }) {
                       rows="3"
                     />
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-text-secondary uppercase mb-1 tracking-wide">Image URL</label>
-                    <input
-                      type="url"
-                      required
-                      value={slideForm.imageUrl}
-                      onChange={(e) => setSlideForm({ ...slideForm, imageUrl: e.target.value })}
-                      className="w-full px-3 py-2 border border-border-color rounded-xl bg-bg-primary text-text-primary focus:outline-none focus:ring-1 focus:ring-acm-blue text-xs transition-colors duration-300"
-                      placeholder="https://example.com/slide.jpg"
-                    />
-                  </div>
+                  <ImageUploader
+                    label="Slide Image"
+                    required
+                    value={slideForm.imageUrl}
+                    onChange={(url) => setSlideForm({ ...slideForm, imageUrl: url })}
+                  />
                   <div>
                     <label className="block text-[10px] font-bold text-text-secondary uppercase mb-1 tracking-wide">Display Order</label>
                     <input
@@ -594,16 +590,11 @@ export default function AdminDashboard({ theme, toggleTheme }) {
                       rows="6"
                     />
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-text-secondary uppercase mb-1 tracking-wide">Photo URL</label>
-                    <input
-                      type="url"
-                      value={messageForm.imageUrl}
-                      onChange={(e) => setMessageForm({ ...messageForm, imageUrl: e.target.value })}
-                      className="w-full px-3 py-2 border border-border-color rounded-xl bg-bg-primary text-text-primary focus:outline-none focus:ring-1 focus:ring-acm-blue text-xs transition-colors duration-300"
-                      placeholder="https://example.com/photo.jpg"
-                    />
-                  </div>
+                  <ImageUploader
+                    label="Official Photo"
+                    value={messageForm.imageUrl}
+                    onChange={(url) => setMessageForm({ ...messageForm, imageUrl: url })}
+                  />
 
                   <button
                     type="submit"
@@ -690,16 +681,11 @@ export default function AdminDashboard({ theme, toggleTheme }) {
                       placeholder="e.g. Vice Chairman"
                     />
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-text-secondary uppercase mb-1 tracking-wide">Photo URL</label>
-                    <input
-                      type="url"
-                      value={teamForm.imageUrl}
-                      onChange={(e) => setTeamForm({ ...teamForm, imageUrl: e.target.value })}
-                      className="w-full px-3 py-2 border border-border-color rounded-xl bg-bg-primary text-text-primary focus:outline-none focus:ring-1 focus:ring-acm-blue text-xs transition-colors duration-300"
-                      placeholder="https://example.com/photo.jpg"
-                    />
-                  </div>
+                  <ImageUploader
+                    label="Officer Photo"
+                    value={teamForm.imageUrl}
+                    onChange={(url) => setTeamForm({ ...teamForm, imageUrl: url })}
+                  />
                   <div>
                     <label className="block text-[10px] font-bold text-text-secondary uppercase mb-1 tracking-wide">GitHub URL</label>
                     <input
@@ -871,6 +857,11 @@ export default function AdminDashboard({ theme, toggleTheme }) {
                       placeholder="e.g. 2023-2027"
                     />
                   </div>
+                  <ImageUploader
+                    label="Profile Picture"
+                    value={memberForm.imageUrl}
+                    onChange={(url) => setMemberForm({ ...memberForm, imageUrl: url })}
+                  />
 
                   <div className="flex gap-2">
                     <button
@@ -884,7 +875,7 @@ export default function AdminDashboard({ theme, toggleTheme }) {
                         type="button"
                         onClick={() => {
                           setEditId(null);
-                          setMemberForm({ name: '', role: 'Member', email: '', batch: '' });
+                          setMemberForm({ name: '', role: 'Member', email: '', batch: '', imageUrl: '' });
                         }}
                         className="bg-bg-primary hover:bg-border-color text-text-primary font-semibold py-2 px-4 rounded-xl text-xs transition-colors"
                       >
@@ -913,9 +904,18 @@ export default function AdminDashboard({ theme, toggleTheme }) {
                       <tbody className="divide-y divide-border-color text-xs">
                         {members.map((m) => (
                           <tr key={m._id} className="hover:bg-bg-primary/50 transition-colors">
-                            <td className="px-6 py-4">
-                              <div className="font-bold text-text-primary">{m.name}</div>
-                              <div className="text-[10px] text-text-secondary">{m.email || 'No Email'}</div>
+                            <td className="px-6 py-4 flex items-center gap-3">
+                              {m.imageUrl ? (
+                                <img src={m.imageUrl} alt={m.name} className="w-8 h-8 rounded-full object-cover border border-border-color flex-shrink-0" />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-acm-blue/10 text-acm-blue font-bold text-xs flex items-center justify-center flex-shrink-0 uppercase">
+                                  {m.name.charAt(0)}
+                                </div>
+                              )}
+                              <div>
+                                <div className="font-bold text-text-primary">{m.name}</div>
+                                <div className="text-[10px] text-text-secondary">{m.email || 'No Email'}</div>
+                              </div>
                             </td>
                             <td className="px-6 py-4 font-semibold text-acm-blue">{m.batch}</td>
                             <td className="px-6 py-4 text-right space-x-3">
@@ -926,7 +926,8 @@ export default function AdminDashboard({ theme, toggleTheme }) {
                                     name: m.name,
                                     role: m.role || 'Member',
                                     email: m.email || '',
-                                    batch: m.batch
+                                    batch: m.batch,
+                                    imageUrl: m.imageUrl || ''
                                   });
                                 }}
                                 className="text-acm-blue hover:text-acm-dark font-bold text-xs uppercase"
@@ -987,7 +988,6 @@ export default function AdminDashboard({ theme, toggleTheme }) {
                   <form onSubmit={handleDeptSubmit} className="space-y-3">
                     {[{label:'Slug (e.g. engineering)', field:'slug', type:'text', req:true},
                       {label:'Display Name', field:'name', type:'text', req:true},
-                      {label:'Banner Image URL', field:'bannerImageUrl', type:'url', req:false},
                     ].map(({label,field,type,req}) => (
                       <div key={field}>
                         <label className="block text-[10px] font-bold text-text-secondary uppercase mb-1 tracking-wide">{label}</label>
@@ -997,6 +997,11 @@ export default function AdminDashboard({ theme, toggleTheme }) {
                         />
                       </div>
                     ))}
+                    <ImageUploader
+                      label="Banner Image"
+                      value={deptForm.bannerImageUrl}
+                      onChange={(url) => setDeptForm({ ...deptForm, bannerImageUrl: url })}
+                    />
                     {[{label:'Description', field:'description'},{label:'Mission', field:'mission'}].map(({label,field}) => (
                       <div key={field}>
                         <label className="block text-[10px] font-bold text-text-secondary uppercase mb-1 tracking-wide">{label}</label>

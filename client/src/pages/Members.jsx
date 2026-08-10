@@ -100,11 +100,15 @@ export default function Members() {
               >
                 {/* Name + Avatar */}
                 <div className="col-span-5 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-acm-blue to-acm-dark flex items-center justify-center flex-shrink-0">
-                    <span className="text-white text-[11px] font-bold">
-                      {member.name.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
+                  {member.imageUrl ? (
+                    <img src={member.imageUrl} alt={member.name} className="w-8 h-8 rounded-full object-cover border border-border-color flex-shrink-0" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-acm-blue to-acm-dark flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-[11px] font-bold">
+                        {member.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                   <span className="text-[13px] font-semibold text-text-primary truncate">{member.name}</span>
                 </div>
 

@@ -1,7 +1,21 @@
 const path = require('path');
 const fs = require('fs');
-const sharp = require('sharp');
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+
+// Ensure Cloudinary uses secure HTTPS URLs
+cloudinary.config({
+  secure: true
+});
+
+// Helper for dynamic sharp loading (prevents esbuild/wrangler from bundling native .node binaries on Cloudflare Workers)
+const getSharp = () => {
+  try {
+    return eval('require')('sharp');
+  } catch (err) {
+    return null;
+  }
+};
 
 // Configure multer memory storage
 const storage = multer.memoryStorage();
@@ -22,6 +36,26 @@ const uploadMiddleware = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 }).single('image');
 
+/**
+ * Helper to upload image buffer to Cloudinary with WebP conversion
+ */
+const uploadToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: 'iiitu-acm',
+        format: 'webp',
+        transformation: [{ quality: 'auto:good' }]
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+    stream.end(buffer);
+  });
+};
+
 const handleImageUpload = (req, res) => {
   uploadMiddleware(req, res, async (err) => {
     if (err instanceof multer.MulterError) {
@@ -35,6 +69,21 @@ const handleImageUpload = (req, res) => {
     }
 
     try {
+      // If Cloudinary URL environment variable is set, upload directly to Cloudinary
+      if (process.env.CLOUDINARY_URL) {
+        const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
+        return res.json({
+          message: 'Image uploaded and converted to WebP on Cloudinary successfully',
+          imageUrl: cloudinaryResult.secure_url
+        });
+      }
+
+      // Fallback: Local filesystem storage (for local dev without CLOUDINARY_URL)
+      const sharp = getSharp();
+      if (!sharp) {
+        throw new Error('Local image processing (sharp) is not available. Please configure CLOUDINARY_URL.');
+      }
+
       const uploadsDir = path.join(__dirname, '../../uploads');
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
@@ -53,13 +102,15 @@ const handleImageUpload = (req, res) => {
         message: 'Image uploaded and converted to WebP successfully',
         imageUrl
       });
-    } catch (sharpErr) {
-      console.error('Sharp conversion error:', sharpErr);
-      return res.status(500).json({ error: 'Failed to process and convert image to WebP' });
+    } catch (uploadErr) {
+      console.error('Image upload error:', uploadErr);
+      return res.status(500).json({ error: 'Failed to process and upload image', details: uploadErr.message });
     }
   });
 };
 
+
 module.exports = {
   handleImageUpload
 };
+

@@ -33,7 +33,7 @@ export default function AdminDashboard({ theme, toggleTheme }) {
   // Message Form
   const [messageForm, setMessageForm] = useState({ role: 'sponsor', name: '', content: '', imageUrl: '' });
   // Team Form
-  const [teamForm, setTeamForm] = useState({ name: '', role: '', imageUrl: '', github: '', linkedin: '', research: '' });
+  const [teamForm, setTeamForm] = useState({ name: '', role: '', category: 'elected', order: 0, imageUrl: '', github: '', linkedin: '', research: '' });
   // Member Form
   const [memberForm, setMemberForm] = useState({ name: '', role: 'Member', email: '', batch: '', imageUrl: '' });
   // Department Form
@@ -270,7 +270,7 @@ export default function AdminDashboard({ theme, toggleTheme }) {
         body: JSON.stringify(teamForm)
       });
       if (res.ok) {
-        setTeamForm({ name: '', role: '', imageUrl: '', github: '', linkedin: '', research: '' });
+        setTeamForm({ name: '', role: '', category: 'elected', order: 0, imageUrl: '', github: '', linkedin: '', research: '' });
         setEditId(null);
         refreshData('team');
       }
@@ -678,7 +678,35 @@ export default function AdminDashboard({ theme, toggleTheme }) {
                       value={teamForm.role}
                       onChange={(e) => setTeamForm({ ...teamForm, role: e.target.value })}
                       className="w-full px-3 py-2 border border-border-color rounded-xl bg-bg-primary text-text-primary focus:outline-none focus:ring-1 focus:ring-acm-blue text-xs transition-colors duration-300"
-                      placeholder="e.g. Vice Chairman"
+                      placeholder="e.g. Vice Chairman / Internal Affairs Lead / IGL"
+                    />
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      <span className="text-[10px] text-text-tertiary">Quick roles:</span>
+                      <button type="button" onClick={() => setTeamForm({ ...teamForm, role: 'Internal Affairs Lead' })} className="text-[10px] text-acm-blue hover:underline">Internal Affairs Lead</button>
+                      <span className="text-[10px] text-text-tertiary">•</span>
+                      <button type="button" onClick={() => setTeamForm({ ...teamForm, role: 'Internal Affairs Officer' })} className="text-[10px] text-acm-blue hover:underline">Internal Affairs Officer</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-text-secondary uppercase mb-1 tracking-wide">Category / Section</label>
+                    <select
+                      value={teamForm.category || 'elected'}
+                      onChange={(e) => setTeamForm({ ...teamForm, category: e.target.value })}
+                      className="w-full px-3 py-2 border border-border-color rounded-xl bg-bg-primary text-text-primary focus:outline-none focus:ring-1 focus:ring-acm-blue text-xs transition-colors duration-300 font-semibold"
+                    >
+                      <option value="elected">Elected Board</option>
+                      <option value="internal_affairs">Internal Affairs</option>
+                      <option value="igl">Interest Group Lead (IGL)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-text-secondary uppercase mb-1 tracking-wide">Display Order</label>
+                    <input
+                      type="number"
+                      value={teamForm.order ?? 0}
+                      onChange={(e) => setTeamForm({ ...teamForm, order: parseInt(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 border border-border-color rounded-xl bg-bg-primary text-text-primary focus:outline-none focus:ring-1 focus:ring-acm-blue text-xs transition-colors duration-300"
+                      placeholder="0"
                     />
                   </div>
                   <ImageUploader
@@ -729,7 +757,7 @@ export default function AdminDashboard({ theme, toggleTheme }) {
                         type="button"
                         onClick={() => {
                           setEditId(null);
-                          setTeamForm({ name: '', role: '', imageUrl: '', github: '', linkedin: '', research: '' });
+                          setTeamForm({ name: '', role: '', category: 'elected', order: 0, imageUrl: '', github: '', linkedin: '', research: '' });
                         }}
                         className="bg-bg-primary hover:bg-border-color text-text-primary font-semibold py-2 px-4 rounded-xl text-xs transition-colors"
                       >
@@ -750,28 +778,38 @@ export default function AdminDashboard({ theme, toggleTheme }) {
                     <table className="min-w-full divide-y divide-border-color">
                       <thead className="bg-bg-primary text-text-primary text-xs font-semibold uppercase tracking-wider">
                         <tr>
-                          <th className="px-6 py-3 text-left">Officer</th>
-                          <th className="px-6 py-3 text-left">Role</th>
-                          <th className="px-6 py-3 text-right">Actions</th>
+                          <th className="px-4 py-3 text-left">Officer</th>
+                          <th className="px-4 py-3 text-left">Role</th>
+                          <th className="px-4 py-3 text-left">Category</th>
+                          <th className="px-3 py-3 text-center">Order</th>
+                          <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border-color text-xs">
                         {team.map((t) => (
                           <tr key={t._id} className="hover:bg-bg-primary/50 transition-colors">
-                            <td className="px-6 py-4 flex items-center gap-3 font-semibold text-text-primary">
+                            <td className="px-4 py-4 flex items-center gap-2.5 font-semibold text-text-primary">
                               {t.imageUrl && (
                                 <img src={t.imageUrl} alt={t.name} className="w-7 h-7 rounded-full object-cover" />
                               )}
                               {t.name}
                             </td>
-                            <td className="px-6 py-4 font-semibold text-acm-blue uppercase">{t.role}</td>
-                            <td className="px-6 py-4 text-right space-x-3">
+                            <td className="px-4 py-4 font-semibold text-acm-blue uppercase text-[11px]">{t.role}</td>
+                            <td className="px-4 py-4">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-bg-elevated text-text-secondary">
+                                {t.category === 'internal_affairs' ? 'Internal Affairs' : t.category === 'igl' ? 'IGL' : 'Elected Board'}
+                              </span>
+                            </td>
+                            <td className="px-3 py-4 text-center font-bold text-text-tertiary">{t.order ?? 0}</td>
+                            <td className="px-4 py-4 text-right space-x-2">
                               <button
                                 onClick={() => {
                                   setEditId(t._id);
                                   setTeamForm({
                                     name: t.name,
                                     role: t.role,
+                                    category: t.category || 'elected',
+                                    order: t.order ?? 0,
                                     imageUrl: t.imageUrl || '',
                                     github: t.github || '',
                                     linkedin: t.linkedin || '',

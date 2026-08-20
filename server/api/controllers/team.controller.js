@@ -4,7 +4,7 @@ const TeamMember = require('../models/team.model');
 const TeamController = {
   getAllTeamMembers: async (req, res) => {
     try {
-      const team = await TeamMember.find();
+      const team = await TeamMember.find().sort({ order: 1, createdAt: 1 });
       res.json(team);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -12,9 +12,18 @@ const TeamController = {
   },
 
   createTeamMember: async (req, res) => {
-    const { name, role, imageUrl, github, linkedin, research } = req.body;
+    const { name, role, category, order, imageUrl, github, linkedin, research } = req.body;
     try {
-      const teamMember = await TeamMember.create({ name, role, imageUrl, github, linkedin, research });
+      const teamMember = await TeamMember.create({
+        name,
+        role,
+        category: category || 'elected',
+        order: Number(order) || 0,
+        imageUrl,
+        github,
+        linkedin,
+        research
+      });
       res.status(201).json(teamMember);
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -25,11 +34,20 @@ const TeamController = {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid team member ID format' });
     }
-    const { name, role, imageUrl, github, linkedin, research } = req.body;
+    const { name, role, category, order, imageUrl, github, linkedin, research } = req.body;
     try {
       const teamMember = await TeamMember.findByIdAndUpdate(
         req.params.id,
-        { name, role, imageUrl, github, linkedin, research },
+        {
+          name,
+          role,
+          category: category || 'elected',
+          order: Number(order) || 0,
+          imageUrl,
+          github,
+          linkedin,
+          research
+        },
         { new: true, runValidators: true }
       );
       if (!teamMember) return res.status(404).json({ message: 'Team member not found' });

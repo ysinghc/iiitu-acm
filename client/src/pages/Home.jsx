@@ -87,18 +87,6 @@ export default function Home() {
       {/* Full-bleed Hero */}
       <HeroCarousel slides={slides} />
 
-      {/* Stats Bar */}
-      <div className="bg-bg-secondary border-b border-border-color transition-colors duration-300">
-        <div className="max-w-6xl mx-auto px-8 py-6 flex items-center justify-around gap-4 flex-wrap">
-          <StatBadge value="2026" label="Chartered" />
-          <div className="w-px h-8 bg-border-color hidden sm:block" />
-          <StatBadge value="ACM" label="Chartering Organization" />
-          <div className="w-px h-8 bg-border-color hidden sm:block" />
-          <StatBadge value="IIITU" label="Host Institute" />
-          <div className="w-px h-8 bg-border-color hidden sm:block" />
-          <StatBadge value="Una, HP" label="Location" />
-        </div>
-      </div>
 
       {/* Message Cards */}
       {(sponsorMsg || chairmanMsg) && (
@@ -110,8 +98,8 @@ export default function Home() {
             </h2>
           </div>
 
-          {sponsorMsg && <MessageCard msg={sponsorMsg} />}
           {chairmanMsg && <MessageCard msg={chairmanMsg} reversed />}
+          {sponsorMsg && <MessageCard msg={sponsorMsg} />}
         </div>
       )}
     </div>

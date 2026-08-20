@@ -104,7 +104,9 @@ function InterestGroupCard({ group, meta, index }) {
               </span>
             )}
           </div>
-         
+          <span className={`text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full flex-shrink-0 ${meta.accentBg} ${meta.accent} border ${meta.accentBorder}`}>
+            Vertical
+          </span>
         </div>
         {group.description && (
           <p className="text-xs text-text-secondary leading-relaxed">{group.description}</p>

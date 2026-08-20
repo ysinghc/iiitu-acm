@@ -253,7 +253,6 @@ export default function DepartmentPage() {
       {/* Interest Groups */}
       <div className="max-w-6xl mx-auto px-8 py-14">
         <div className="mb-10">
-          <span className={`text-[10px] font-bold uppercase tracking-widest ${meta.accent}`}>Verticals</span>
           <h2 className="text-2xl font-bold text-text-primary mt-1">Interest Groups</h2>
           <p className="text-xs text-text-secondary mt-1">
             Each vertical is a focused community with an Interest Group Lead guiding projects, study sessions, and collaborative work.

@@ -10,7 +10,7 @@ export default function Navbar({ theme, toggleTheme }) {
     { name: 'Home', path: '/' },
     { name: 'Team', path: '/team' },
     { name: 'Members', path: '/members' },
-    { name: 'Verticals', path: '/verticals' },
+    { name: 'Departments', path: '/verticals' },
   ];
 
   return (

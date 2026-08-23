@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -7,9 +7,14 @@ import Team from './pages/Team';
 import Members from './pages/Members';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
-import Verticals from './pages/Verticals/index';
-import DepartmentPage from './pages/Verticals/DepartmentPage';
+import Verticals from './pages/Departments/index';
+import DepartmentPage from './pages/Departments/DepartmentPage';
 import './App.css';
+
+function RedirectVerticals() {
+  const { slug } = useParams();
+  return <Navigate to={slug ? `/departments/${slug}` : '/departments'} replace />;
+}
 
 function App() {
   const [theme, setTheme] = useState(() => {
@@ -48,8 +53,10 @@ function App() {
                     <Route path="/" element={<Home />} />
                     <Route path="/team" element={<Team />} />
                     <Route path="/members" element={<Members />} />
-                    <Route path="/verticals" element={<Verticals />} />
-                    <Route path="/verticals/:slug" element={<DepartmentPage />} />
+                    <Route path="/departments" element={<Verticals />} />
+                    <Route path="/departments/:slug" element={<DepartmentPage />} />
+                    <Route path="/verticals" element={<Navigate to="/departments" replace />} />
+                    <Route path="/verticals/:slug" element={<RedirectVerticals />} />
                     <Route path="/admin/login" element={<AdminLogin />} />
                   </Routes>
                 </main>

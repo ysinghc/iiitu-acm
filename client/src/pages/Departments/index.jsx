@@ -67,7 +67,7 @@ export default function Verticals() {
       {/* Page Header */}
       <div className="bg-bg-secondary border-b border-border-color">
         <div className="max-w-6xl mx-auto px-6 md:px-8 py-10 md:py-12">
-          <span className="acm-tag">Verticals</span>
+          <span className="acm-tag">Departments</span>
           <h1 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight text-text-primary">
             Departments
           </h1>
@@ -106,7 +106,7 @@ export default function Verticals() {
               return (
                 <Link
                   key={dept._id}
-                  to={`/verticals/${dept.slug}`}
+                  to={`/departments/${dept.slug}`}
                   className="group block h-full"
                 >
                   <div className="bg-card-bg border border-border-color rounded-2xl p-7 md:p-8 hover:border-acm-blue/40 transition-all duration-300 hover:shadow-lg hover:shadow-acm-blue/5 flex flex-col justify-between h-full group-hover:-translate-y-0.5">

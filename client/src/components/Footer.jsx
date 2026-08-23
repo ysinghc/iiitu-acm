@@ -35,7 +35,7 @@ export default function Footer() {
                 { label: 'Home', to: '/' },
                 { label: 'Executive Team', to: '/team' },
                 { label: 'Member Directory', to: '/members' },
-                { label: 'Departments & Verticals', to: '/verticals' },
+                { label: 'Departments & Verticals', to: '/departments' },
                 { label: 'Chapter Bylaws', href: '/document.pdf' },
               ].map(item => (
                 <li key={item.label}>

@@ -10,8 +10,13 @@ export default function Navbar({ theme, toggleTheme }) {
     { name: 'Home', path: '/' },
     { name: 'Team', path: '/team' },
     { name: 'Members', path: '/members' },
-    { name: 'Verticals', path: '/verticals' },
+    { name: 'Departments', path: '/departments' },
   ];
+
+  const checkIsActive = (path) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.toLowerCase().startsWith(path.toLowerCase());
+  };
 
   return (
     <nav className="glass-nav sticky top-0 z-50 transition-all duration-300">
@@ -34,9 +39,7 @@ export default function Navbar({ theme, toggleTheme }) {
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => {
-              const isActive = link.path === '/'
-                ? location.pathname === link.path
-                : location.pathname.startsWith(link.path);
+              const isActive = checkIsActive(link.path);
               return (
                 <Link
                   key={link.path}
@@ -105,9 +108,7 @@ export default function Navbar({ theme, toggleTheme }) {
       {isOpen && (
         <div className="md:hidden border-t border-border-color bg-bg-secondary/95 backdrop-blur-xl px-6 py-4 space-y-1">
           {navLinks.map((link) => {
-            const isActive = link.path === '/'
-              ? location.pathname === link.path
-              : location.pathname.startsWith(link.path);
+            const isActive = checkIsActive(link.path);
             return (
               <Link
                 key={link.path}

@@ -7,8 +7,8 @@ import Team from './pages/Team';
 import Members from './pages/Members';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
-import Verticals from './pages/Verticals/index';
-import DepartmentPage from './pages/Verticals/DepartmentPage';
+import Verticals from './pages/Departments/index';
+import DepartmentPage from './pages/Departments/DepartmentPage';
 import './App.css';
 
 function App() {

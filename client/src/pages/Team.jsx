@@ -186,9 +186,29 @@ export default function Team() {
     return r.startsWith('igl') || r.includes('interest group lead');
   };
 
-  const chartered = team.filter(m => !isInternalAffairs(m) && !isIGL(m));
+  const DEPARTMENT_NAMES = ['deep shekhar singh', 'gaurav upreti'];
+  const DEPARTMENT_ROLES = {
+    'deep shekhar singh': 'IGL - Engineering Department',
+    'gaurav upreti': 'IGL - Research Department',
+  };
+  const isDepartment = (member) => {
+    if (member.category === 'department') return true;
+    return DEPARTMENT_NAMES.includes((member.name || '').toLowerCase());
+  };
+
+  const chartered = team.filter(m => !isInternalAffairs(m) && !isIGL(m) && !isDepartment(m));
   const internalAffairs = team.filter(m => isInternalAffairs(m));
-  const clubAppointees = team.filter(m => isIGL(m));
+  const departments = team.filter(m => isDepartment(m)).map(m => ({
+    ...m,
+    role: DEPARTMENT_ROLES[(m.name || '').toLowerCase()] || m.role,
+  }));
+  const clubAppointees = team.filter(m => isIGL(m)).map(m => {
+    const role = m.role || '';
+    const newRole = /^IGL/i.test(role)
+      ? role.replace(/^IGL/i, 'Expert')
+      : `Expert - ${role}`;
+    return { ...m, role: newRole };
+  });
 
   return (
     <div className="bg-bg-primary min-h-screen transition-colors duration-300">
@@ -201,7 +221,7 @@ export default function Team() {
             </h1>
             <p className="mt-3 text-text-secondary text-sm max-w-lg leading-relaxed">
               {activePane === 'executive'
-                ? 'Our chapter governance is led by three executive roles: the Elected Board, Internal Affairs, and Interest Group Leads (IGLs).'
+                ? 'Our chapter governance is led by the Elected Board, Internal Affairs, Departments, and Expert Groups.'
                 : 'Core technical leadership and open-source codebase contributors powering IIITU ACM.'}
             </p>
           </div>
@@ -211,21 +231,19 @@ export default function Team() {
             <div className="inline-flex p-1 bg-bg-elevated border border-border-color rounded-xl">
               <button
                 onClick={() => handlePaneChange('executive')}
-                className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
-                  activePane === 'executive'
-                    ? 'bg-acm-blue text-white shadow-sm'
-                    : 'text-text-secondary hover:text-text-primary'
-                }`}
+                className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${activePane === 'executive'
+                  ? 'bg-acm-blue text-white shadow-sm'
+                  : 'text-text-secondary hover:text-text-primary'
+                  }`}
               >
                 Leadership
               </button>
               <button
                 onClick={() => handlePaneChange('dev')}
-                className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
-                  activePane === 'dev'
-                    ? 'bg-acm-blue text-white shadow-sm'
-                    : 'text-text-secondary hover:text-text-primary'
-                }`}
+                className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${activePane === 'dev'
+                  ? 'bg-acm-blue text-white shadow-sm'
+                  : 'text-text-secondary hover:text-text-primary'
+                  }`}
               >
                 Development Team
               </button>
@@ -287,19 +305,37 @@ export default function Team() {
                 )}
               </div>
 
-              {/* 3. Interest Group Leads (IGL) */}
+              {/* 3. Departments */}
+              <div>
+                <div className="mb-8">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-acm-blue">Operational Units</span>
+                  <h2 className="text-xl md:text-2xl font-bold text-text-primary mt-1">Departments</h2>
+                  <p className="text-xs text-text-secondary mt-1">Key departmental leads driving chapter operations and technical verticals.</p>
+                </div>
+                {departments.length === 0 ? (
+                  <p className="text-xs text-text-secondary italic">No department members found.</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5 stagger">
+                    {departments.map((member, i) => (
+                      <MemberCard key={member._id || member.name} member={member} index={i + chartered.length + internalAffairs.length} />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 4. Expert Groups (formerly Interest Group Leads) */}
               <div>
                 <div className="mb-8">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-acm-blue">Domain Leads</span>
-                  <h2 className="text-xl md:text-2xl font-bold text-text-primary mt-1">Interest Group Leads (IGLs)</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-text-primary mt-1">Expert Groups</h2>
                   <p className="text-xs text-text-secondary mt-1">Appointed leads directing technical project verticals, study groups, and research focus areas.</p>
                 </div>
                 {clubAppointees.length === 0 ? (
-                  <p className="text-xs text-text-secondary italic">No interest group leads found.</p>
+                  <p className="text-xs text-text-secondary italic">No expert group leads found.</p>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 stagger">
                     {clubAppointees.map((member, i) => (
-                      <MemberCard key={member._id} member={member} index={i + chartered.length + internalAffairs.length} />
+                      <MemberCard key={member._id} member={member} index={i + chartered.length + internalAffairs.length + departments.length} />
                     ))}
                   </div>
                 )}
@@ -308,6 +344,39 @@ export default function Team() {
           ) : (
             /* Dev Team Pane — Live GitHub API Data */
             <div className="max-w-4xl mx-auto space-y-8">
+
+              {/* Full Stack Lead Section */}
+              <div>
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-3">
+                  Full Stack Lead
+                </h2>
+                <div className="bg-card-bg border border-border-color rounded-xl overflow-hidden shadow-sm">
+                  <div className="flex items-center justify-between px-5 py-4">
+                    <div className="flex items-center gap-4">
+                      <img
+                        src="https://avatars.githubusercontent.com/aryan-sheoran"
+                        alt="Aryan Sheoran"
+                        className="w-10 h-10 rounded-full object-cover border border-border-color"
+                      />
+                      <div>
+                        <h3 className="text-sm font-bold text-text-primary">Aryan Sheoran</h3>
+                        <p className="text-xs text-text-secondary">Full Stack Lead</p>
+                      </div>
+                    </div>
+                    <a
+                      href="https://github.com/aryan-sheoran"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-acm-blue hover:underline"
+                    >
+                      <GitHubIcon />
+                      @aryan-sheoran
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Codebase Contributors */}
               <div>
                 <h2 className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-3">
                   Codebase Contributors

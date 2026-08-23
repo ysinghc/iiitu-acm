@@ -190,8 +190,8 @@ export default function DepartmentPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] bg-bg-primary gap-4">
         <p className="text-text-primary font-semibold">Department not found.</p>
-        <Link to="/verticals" className="text-sm text-acm-blue hover:underline">
-          ← Back to Verticals
+        <Link to="/departments" className="text-sm text-acm-blue hover:underline">
+          ← Back to Departments
         </Link>
       </div>
     );
@@ -209,7 +209,7 @@ export default function DepartmentPage() {
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
         <div className="relative max-w-6xl mx-auto px-8 py-20">
-          <Link to="/verticals" className="inline-flex items-center gap-1.5 text-white/60 hover:text-white text-xs transition-colors mb-6">
+          <Link to="/departments" className="inline-flex items-center gap-1.5 text-white/60 hover:text-white text-xs transition-colors mb-6">
             <ChevronLeft className="h-3.5 w-3.5" />
             All Departments
           </Link>

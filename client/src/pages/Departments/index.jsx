@@ -106,7 +106,7 @@ export default function Verticals() {
               return (
                 <Link
                   key={dept._id}
-                  to={`/verticals/${dept.slug}`}
+                  to={`/departments/${dept.slug}`}
                   className="group block h-full"
                 >
                   <div className="bg-card-bg border border-border-color rounded-2xl p-7 md:p-8 hover:border-acm-blue/40 transition-all duration-300 hover:shadow-lg hover:shadow-acm-blue/5 flex flex-col justify-between h-full group-hover:-translate-y-0.5">

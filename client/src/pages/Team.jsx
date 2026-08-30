@@ -86,24 +86,14 @@ export default function Team() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getRolePriority = (roleName) => {
-      const r = (roleName || '').toLowerCase();
-      if (r.includes('sponsor')) return 1;
-      if (r.includes('hod') || r.includes('head of department')) return 2;
-      if (r.includes('chair') && !r.includes('vice')) return 3;
-      if (r.includes('vice')) return 4;
-      if (r.includes('treasurer')) return 5;
-      if (r.includes('secretary')) return 6;
-      return 10;
-    };
-
     fetch(`${API}/public/team`)
       .then(r => r.json())
       .then(d => {
+        // Sort by order ascending if provided, then by name
         const sorted = [...d].sort((a, b) => {
-          const prioA = getRolePriority(a.role);
-          const prioB = getRolePriority(b.role);
-          if (prioA !== prioB) return prioA - prioB;
+          const orderA = a.order ?? 99;
+          const orderB = b.order ?? 99;
+          if (orderA !== orderB) return orderA - orderB;
           return a.name.localeCompare(b.name);
         });
         setTeam(sorted);
@@ -126,35 +116,49 @@ export default function Team() {
     );
   }
 
-  // Filter into Chartered Officers and Club Appointed/IGL
-  const chartered = team.filter(member => !member.role.toLowerCase().startsWith('igl'));
-  const clubAppointees = team.filter(member => member.role.toLowerCase().startsWith('igl'));
+  // Filter based on explicit database category field, falling back to role text matching for legacy records
+  const isInternalAffairs = (member) => {
+    if (member.category === 'internal_affairs') return true;
+    if (member.category && member.category !== 'internal_affairs') return false;
+    const r = (member.role || '').toLowerCase();
+    return r.includes('internal') || r.includes('affair') || r.includes('grievance');
+  };
+
+  const isIGL = (member) => {
+    if (member.category === 'igl') return true;
+    if (member.category && member.category !== 'igl') return false;
+    const r = (member.role || '').toLowerCase();
+    return r.startsWith('igl') || r.includes('interest group lead');
+  };
+
+  const chartered = team.filter(m => !isInternalAffairs(m) && !isIGL(m));
+  const internalAffairs = team.filter(m => isInternalAffairs(m));
+  const clubAppointees = team.filter(m => isIGL(m));
 
   return (
     <div className="bg-bg-primary min-h-screen transition-colors duration-300">
       {/* Page Header */}
       <div className="bg-bg-secondary border-b border-border-color">
         <div className="max-w-6xl mx-auto px-8 py-14">
-          <span className="acm-tag">IIITU ACM</span>
           <h1 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight text-text-primary">
-            Leadership & Verticals
+            Leadership & Executive Board 
           </h1>
           <p className="mt-3 text-text-secondary text-sm max-w-lg leading-relaxed">
-            Meet the elected officers and interest group leads who direct our initiatives, build products, and advance computing research.
+            Our chapter governance is led by three executive roles: the Elected Board, Internal Affairs, and Interest Group Leads (IGLs).
           </p>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-8 py-14 space-y-16">
-        {/* Chartered Officers Section */}
+        {/* 1. Elected Board */}
         <div>
           <div className="mb-8">
             <span className="text-[10px] font-bold uppercase tracking-widest text-acm-blue">ACM Chartered Roles</span>
             <h2 className="text-xl md:text-2xl font-bold text-text-primary mt-1">Elected Board</h2>
-            <p className="text-xs text-text-secondary mt-1">Mandated officers in accordance with the ACM Chapter bylaws.</p>
+            <p className="text-xs text-text-secondary mt-1">Mandated officers elected in accordance with ACM Chapter bylaws.</p>
           </div>
           {chartered.length === 0 ? (
-            <p className="text-xs text-text-secondary italic">No board members found.</p>
+            <p className="text-xs text-text-secondary italic">No elected board members found.</p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5 stagger">
               {chartered.map((member, i) => (
@@ -164,19 +168,46 @@ export default function Team() {
           )}
         </div>
 
-        {/* Club Appointees Section */}
+        {/* 2. Internal Affairs */}
         <div>
           <div className="mb-8">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-acm-blue">Club Appointments</span>
-            <h2 className="text-xl md:text-2xl font-bold text-text-primary mt-1">Interest Group Leads (IGL)</h2>
-            <p className="text-xs text-text-secondary mt-1">Leads appointed by the chapter to direct technical and research focus areas.</p>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-acm-blue">Chapter Governance</span>
+            <h2 className="text-xl md:text-2xl font-bold text-text-primary mt-1">Internal Affairs</h2>
+            <p className="text-xs text-text-secondary mt-1 max-w-2xl leading-relaxed">
+              Handles internal chapter operations, decorum, and resolves complaints or feedback from chapter members, IIITU students, or faculty.
+            </p>
+          </div>
+          {internalAffairs.length === 0 ? (
+            <div className="p-6 bg-card-bg border border-border-color rounded-2xl max-w-2xl text-left space-y-2">
+              <p className="text-xs text-text-secondary leading-relaxed">
+                The <span className="font-semibold text-text-primary">Internal Affairs team</span> oversees chapter standards, conflict resolution, and internal coordination.
+              </p>
+              <p className="text-[11px] text-text-tertiary">
+                Any issues or grievances raised by IIITU students, faculty, or chapter members are reviewed confidentially by this division.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5 stagger">
+              {internalAffairs.map((member, i) => (
+                <MemberCard key={member._id} member={member} index={i + chartered.length} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 3. Interest Group Leads (IGL) */}
+        <div>
+          <div className="mb-8">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-acm-blue">Domain Leads</span>
+            <h2 className="text-xl md:text-2xl font-bold text-text-primary mt-1">Interest Group Leads (IGLs)</h2>
+            <p className="text-xs text-text-secondary mt-1">Appointed leads directing technical project verticals, study groups, and research focus areas.</p>
           </div>
           {clubAppointees.length === 0 ? (
             <p className="text-xs text-text-secondary italic">No interest group leads found.</p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 stagger">
               {clubAppointees.map((member, i) => (
-                <MemberCard key={member._id} member={member} index={i + chartered.length} />
+                <MemberCard key={member._id} member={member} index={i + chartered.length + internalAffairs.length} />
               ))}
             </div>
           )}

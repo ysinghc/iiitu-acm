@@ -43,7 +43,7 @@ function App() {
             element={
               <>
                 <Navbar theme={theme} toggleTheme={toggleTheme} />
-                <main className="flex-grow">
+                <main className="flex-grow flex flex-col">
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/team" element={<Team />} />

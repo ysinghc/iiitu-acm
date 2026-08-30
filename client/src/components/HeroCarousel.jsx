@@ -22,7 +22,7 @@ export default function HeroCarousel({ slides }) {
 
   if (!slides || slides.length === 0) {
     return (
-      <div className="w-full h-[520px] bg-gradient-to-br from-acm-dark via-acm-blue to-acm-dark flex flex-col items-center justify-center text-white relative overflow-hidden">
+      <div className="w-full bg-gradient-to-br from-acm-dark via-acm-blue to-acm-dark flex flex-col items-center justify-center text-white relative overflow-hidden" style={{ height: 'calc(100vh - 56px)' }}>
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: 'radial-gradient(circle at 25% 50%, white 1px, transparent 1px), radial-gradient(circle at 75% 50%, white 1px, transparent 1px)', backgroundSize: '60px 60px' }}
         />
@@ -37,7 +37,7 @@ export default function HeroCarousel({ slides }) {
   const nextSlide = () => goTo((currentIndex + 1) % slides.length);
 
   return (
-    <div className="relative w-full h-[520px] md:h-[600px] overflow-hidden group bg-black">
+    <div className="relative w-full overflow-hidden group bg-black" style={{ height: 'calc(100vh - 56px)' }}>
       {slides.map((slide, idx) => (
         <div
           key={slide._id || idx}
@@ -73,7 +73,6 @@ export default function HeroCarousel({ slides }) {
               transition: 'opacity 0.9s 0.2s ease, transform 0.9s 0.2s ease',
             }}
           >
-            <span className="acm-tag text-white/50 mb-3 block">IIITU ACM Student Chapter</span>
             <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight leading-tight mb-3">
               {slide.title}
             </h2>

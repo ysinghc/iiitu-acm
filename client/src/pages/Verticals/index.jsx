@@ -1,100 +1,157 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Code2, FlaskConical, ArrowRight } from 'lucide-react';
+import { ArrowUpRight, FolderKanban } from 'lucide-react';
+import { API } from '../../utils/apiURL';
 
-const departments = [
-  {
-    slug: 'engineering',
-    name: 'Engineering Department',
-    subtitle: 'Product Building, Systems & Application Development',
-    description:
-      'Focused on building software products, systems engineering, and applied computing. Members collaborate on full-stack projects, developer tooling, and competitive programming.',
-    Icon: Code2,
-    groups: ['Software Engineering', 'Algorithms, Logic & Problem Solving'],
-    color: 'from-blue-600 to-indigo-700',
-    accent: 'text-blue-400',
-    border: 'border-blue-500/20',
-    bg: 'bg-blue-500/5',
-  },
-  {
-    slug: 'research',
-    name: 'Research Department',
-    subtitle: 'Scientific Computing, AI & Security Research',
-    description:
-      'Dedicated to advancing scientific computing through AI research, cybersecurity investigation, and foundational computer science exploration. Members engage in paper reading, implementations, and publications.',
-    Icon: FlaskConical,
-    groups: ['Artificial Intelligence', 'Cyber Security', 'Core Computer Science'],
-    color: 'from-violet-600 to-purple-700',
-    accent: 'text-violet-400',
-    border: 'border-violet-500/20',
-    bg: 'bg-violet-500/5',
-  },
-];
+function SkeletonCard() {
+  return (
+    <div className="bg-card-bg border border-border-color rounded-2xl p-6 md:p-8 animate-pulse flex flex-col justify-between min-h-[220px]">
+      <div>
+        <div className="flex items-center justify-between gap-4">
+          <div className="h-6 bg-bg-elevated rounded w-1/2" />
+          <div className="w-8 h-8 rounded-lg bg-bg-elevated" />
+        </div>
+        <div className="h-4 bg-bg-elevated rounded w-full mt-4" />
+        <div className="h-4 bg-bg-elevated rounded w-3/4 mt-2" />
+      </div>
+      <div className="flex gap-2 mt-6">
+        <div className="h-5 w-20 bg-bg-elevated rounded-md" />
+        <div className="h-5 w-24 bg-bg-elevated rounded-md" />
+      </div>
+    </div>
+  );
+}
 
 export default function Verticals() {
+  const [departments, setDepartments] = useState([]);
+  const [groupsByDept, setGroupsByDept] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [deptsRes, igsRes] = await Promise.all([
+          fetch(`${API}/public/departments`),
+          fetch(`${API}/public/interest-groups`),
+        ]);
+
+        if (!deptsRes.ok) throw new Error('Failed to fetch departments');
+
+        const depts = await deptsRes.json();
+        setDepartments(depts);
+
+        if (igsRes.ok) {
+          const igs = await igsRes.json();
+          const grouped = {};
+          for (const ig of igs) {
+            const deptId = ig.department?._id || ig.department;
+            if (!deptId) continue;
+            if (!grouped[deptId]) grouped[deptId] = [];
+            grouped[deptId].push(ig.name);
+          }
+          setGroupsByDept(grouped);
+        }
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
   return (
-    <div className="bg-bg-primary min-h-screen transition-colors duration-300">
+    <div className="flex-1 flex flex-col bg-bg-primary transition-colors duration-300">
       {/* Page Header */}
       <div className="bg-bg-secondary border-b border-border-color">
-        <div className="max-w-6xl mx-auto px-8 py-14">
-          <span className="acm-tag">IIITU ACM</span>
+        <div className="max-w-6xl mx-auto px-6 md:px-8 py-10 md:py-12">
+          <span className="acm-tag">Verticals</span>
           <h1 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight text-text-primary">
-            Departments & Verticals
+            Departments
           </h1>
-          <p className="mt-3 text-text-secondary text-sm max-w-lg leading-relaxed">
-            Our chapter operates across two departments, each housing specialized interest groups led by student experts. Explore each division and its members.
+          <p className="mt-2 text-text-secondary text-sm max-w-md leading-relaxed">
+            Explore our specialized divisions driving research, engineering, and student innovation.
           </p>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-8 py-14 space-y-8">
-        {departments.map(dept => (
-          <Link
-            key={dept.slug}
-            to={`/verticals/${dept.slug}`}
-            className="group block"
-          >
-            <div className={`border ${dept.border} ${dept.bg} rounded-2xl p-8 card-hover transition-all duration-300`}>
-              <div className="flex flex-col md:flex-row md:items-start gap-6">
-                {/* Icon */}
-                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${dept.color} flex items-center justify-center flex-shrink-0`}>
-                  <dept.Icon className="h-7 w-7 text-white" strokeWidth={1.5} />
-                </div>
+      {/* Main Content Area filling remaining space */}
+      <div className="flex-1 max-w-6xl w-full mx-auto px-6 md:px-8 py-8 md:py-12 flex flex-col justify-center">
+        {loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        )}
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-4">
+        {error && (
+          <div className="text-center py-16 my-auto">
+            <p className="text-text-secondary text-sm">Could not load departments. Please try again later.</p>
+          </div>
+        )}
+
+        {!loading && !error && departments.length === 0 && (
+          <div className="text-center py-16 my-auto">
+            <p className="text-text-secondary text-sm">No departments found.</p>
+          </div>
+        )}
+
+        {!loading && !error && departments.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 my-auto">
+            {departments.map((dept) => {
+              const groups = groupsByDept[dept._id] || [];
+
+              return (
+                <Link
+                  key={dept._id}
+                  to={`/verticals/${dept.slug}`}
+                  className="group block h-full"
+                >
+                  <div className="bg-card-bg border border-border-color rounded-2xl p-7 md:p-8 hover:border-acm-blue/40 transition-all duration-300 hover:shadow-lg hover:shadow-acm-blue/5 flex flex-col justify-between h-full group-hover:-translate-y-0.5">
                     <div>
-                      <h2 className="text-xl font-bold text-text-primary group-hover:text-acm-blue transition-colors">
-                        {dept.name}
-                      </h2>
-                      <p className={`text-[11px] font-semibold uppercase tracking-wider mt-0.5 ${dept.accent}`}>
-                        {dept.subtitle}
+                      {/* Top Header & Link Action */}
+                      <div className="flex items-start justify-between gap-4 mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-acm-blue/10 flex items-center justify-center text-acm-blue flex-shrink-0">
+                            <FolderKanban className="h-5 w-5" strokeWidth={1.8} />
+                          </div>
+                          <div>
+                            <h2 className="text-lg font-bold text-text-primary group-hover:text-acm-blue transition-colors">
+                              {dept.name}
+                            </h2>
+                          </div>
+                        </div>
+
+                        <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center text-text-tertiary group-hover:text-acm-blue group-hover:bg-acm-blue/10 transition-all flex-shrink-0">
+                          <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                        </div>
+                      </div>
+
+                      {/* Clean Description */}
+                      <p className="text-text-secondary text-sm leading-relaxed line-clamp-3">
+                        {dept.description}
                       </p>
                     </div>
-                    <ArrowRight className="h-5 w-5 text-text-tertiary group-hover:text-acm-blue group-hover:translate-x-1 transition-all flex-shrink-0" />
-                  </div>
 
-                  <p className="text-sm text-text-secondary leading-relaxed mt-3 max-w-2xl">
-                    {dept.description}
-                  </p>
-
-                  {/* Interest Groups Preview */}
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    {dept.groups.map(g => (
-                      <span
-                        key={g}
-                        className="text-[11px] font-medium text-text-secondary bg-bg-elevated border border-border-color rounded-full px-3 py-1"
-                      >
-                        {g}
-                      </span>
-                    ))}
+                    {/* Minimal Groups Footer */}
+                    {groups.length > 0 && (
+                      <div className="pt-6 mt-6 border-t border-border-subtle flex items-center gap-2 overflow-hidden text-xs text-text-tertiary">
+                        <span className="font-medium text-text-secondary flex-shrink-0">
+                          {groups.length} {groups.length === 1 ? 'Vertical' : 'Verticals'}:
+                        </span>
+                        <span className="truncate text-text-secondary/80">
+                          {groups.join(' • ')}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </div>
-            </div>
-          </Link>
-        ))}
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

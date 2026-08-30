@@ -44,7 +44,6 @@ export default function Members() {
       {/* Page Header */}
       <div className="bg-bg-secondary border-b border-border-color">
         <div className="max-w-6xl mx-auto px-8 py-14">
-          <span className="acm-tag">Chapter Roster</span>
           <h1 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight text-text-primary">
             Member Directory
           </h1>

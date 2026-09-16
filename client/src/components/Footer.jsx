@@ -12,10 +12,10 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2.5 mb-4">
-              <img 
-                src="/iiitu-acm.jpeg" 
-                alt="IIITU ACM Logo" 
-                className="w-6 h-6 rounded-md object-cover" 
+              <img
+                src="/iiitu-acm.jpeg"
+                alt="IIITU ACM Logo"
+                className="w-6 h-6 rounded-md object-cover"
               />
               <div>
                 <p className="text-sm font-bold text-text-primary tracking-tight">IIITU ACM</p>
@@ -33,6 +33,7 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {[
                 { label: 'Home', to: '/' },
+                { label: 'Events & Workshops', to: '/events' },
                 { label: 'Executive Team', to: '/team' },
                 { label: 'Member Directory', to: '/members' },
                 { label: 'Departments & Verticals', to: '/verticals' },
@@ -90,8 +91,8 @@ export default function Footer() {
           <p className="text-[11px] text-text-tertiary">
             © {year} IIITU ACM Student Chapter. All rights reserved.
           </p>
-          <Link to="/admin/login" className="text-[11px] text-text-tertiary hover:text-text-secondary transition-colors">
-            Admin Portal
+          <Link to="/login" className="text-[11px] text-text-tertiary hover:text-text-secondary transition-colors">
+            Member Portal
           </Link>
         </div>
       </div>

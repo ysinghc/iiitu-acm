@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Code2, FlaskConical, ExternalLink, BookOpen, Users, ChevronLeft, Link2 } from 'lucide-react';
+import { Code2, FlaskConical, ExternalLink, Users, ChevronLeft, Link2 } from 'lucide-react';
 import { API } from '../../utils/apiURL';
 
 const deptMeta = {
@@ -35,11 +35,12 @@ function MemberAvatar({ member }) {
 
 function IglCard({ igl, accentClass }) {
   if (!igl) return null;
+  const photo = igl.avatarUrl || igl.imageUrl || '';
   return (
     <div className="flex items-center gap-3 bg-bg-primary border border-border-color rounded-xl p-3">
       <div className="w-10 h-10 rounded-full border-2 border-border-color overflow-hidden flex-shrink-0 bg-bg-elevated">
-        {igl.imageUrl ? (
-          <img src={igl.imageUrl} alt={igl.name} className="w-full h-full object-cover object-top" />
+        {photo ? (
+          <img src={photo} alt={igl.name} className="w-full h-full object-cover object-top" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-sm font-bold text-text-tertiary">{igl.name.charAt(0)}</span>
@@ -61,12 +62,6 @@ function IglCard({ igl, accentClass }) {
           <a href={igl.linkedin} target="_blank" rel="noopener noreferrer"
             className="text-text-tertiary hover:text-acm-blue transition-colors" title="LinkedIn">
             <ExternalLink className="h-3.5 w-3.5" />
-          </a>
-        )}
-        {igl.research && (
-          <a href={igl.research} target="_blank" rel="noopener noreferrer"
-            className="text-text-tertiary hover:text-acm-blue transition-colors" title="Research">
-            <BookOpen className="h-3.5 w-3.5" />
           </a>
         )}
       </div>

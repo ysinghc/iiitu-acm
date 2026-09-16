@@ -16,30 +16,70 @@ const path = require('path');
 const adminRoutes = require('./api/routes/admin.routes');
 const carouselRoutes = require('./api/routes/carousel.routes');
 const messageRoutes = require('./api/routes/message.routes');
-const teamRoutes = require('./api/routes/team.routes');
-const memberRoutes = require('./api/routes/member.routes');
 const departmentRoutes = require('./api/routes/department.routes');
 const interestGroupRoutes = require('./api/routes/interestGroup.routes');
 const uploadRoutes = require('./api/routes/upload.routes');
+const eventRoutes = require('./api/routes/event.routes');
+const statsRoutes = require('./api/routes/stats.routes');
+
+// v1: role-based chapter platform (auth, users, event workflow, progress, inbox)
+const v1Routes = require('./src/routes');
+const { notFound, errorHandler } = require('./src/middlewares/errorHandler');
+const { apiLimiter } = require('./src/middlewares/rateLimit');
+const bootstrap = require('./src/bootstrap');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// 1. Universal CORS Middleware - Must run FIRST before all routes and DB connection logic
+// Behind Vercel/CDN: trust the first proxy hop so req.ip (rate limiting,
+// logging) is the real client IP, not the proxy's.
+app.set('trust proxy', 1);
+
+// 1. Origin allowlist — the API only speaks to the chapter domain.
+// Requests WITHOUT an Origin header (curl, health checks, server-to-server)
+// are allowed through; browsers on any other origin get no CORS headers and
+// a 403, so the API effectively does not respond to them.
+const ALLOWED_ORIGINS = (
+  process.env.ALLOWED_ORIGINS ||
+  (process.env.NODE_ENV === 'production'
+    ? 'https://acmiiitu.in,https://www.acmiiitu.in'
+    : 'http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,https://acmiiitu.in,https://www.acmiiitu.in')
+)
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const isAllowedOrigin = (origin) => !origin || ALLOWED_ORIGINS.includes(origin);
+
 app.use((req, res, next) => {
-  const origin = req.headers.origin || '*';
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
+  const origin = req.headers.origin;
+
+  if (isAllowedOrigin(origin)) {
+    if (origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Vary', 'Origin');
+    }
+    if (req.method === 'OPTIONS') {
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+      res.setHeader('Access-Control-Max-Age', '86400');
+      return res.status(204).end();
+    }
+    return next();
   }
-  next();
+
+  // Browser request from anywhere else: refuse outright.
+  if (req.method === 'OPTIONS') {
+    return res.status(403).json({ error: { message: 'Origin not allowed' } });
+  }
+  return res.status(403).json({ error: { message: 'Origin not allowed' } });
 });
 
 app.use(express.json());
+
+// Global flood guard (IP-keyed; per-account limits sit on auth/upload routes).
+app.use(apiLimiter);
 
 
 // Static uploads directory serving
@@ -57,14 +97,23 @@ app.use(async (req, res, next) => {
 });
 
 // Routes Registration
+// NOTE: the separate roster/team collections are gone — people come from
+// login accounts (see GET /api/v1/directory). No team/member routers.
 app.use('/api/admin', adminRoutes);
 app.use(carouselRoutes);
 app.use(messageRoutes);
-app.use(teamRoutes);
-app.use(memberRoutes);
 app.use(departmentRoutes);
 app.use(interestGroupRoutes);
 app.use(uploadRoutes);
+app.use(eventRoutes);
+app.use(statsRoutes);
+
+// v1 chapter platform (versioned; legacy routes above stay untouched)
+app.use('/api/v1', v1Routes);
+
+// Central error handling (v1 shapes + legacy next(err) safety net)
+app.use(notFound);
+app.use(errorHandler);
 
 // Seed default admin if none exists
 async function seedDefaultAdmin() {
@@ -138,6 +187,7 @@ if (require.main === module) {
     .then(async () => {
       await seedDefaultAdmin();
       await seedDefaultMessages();
+      await bootstrap();
       app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
       });

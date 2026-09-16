@@ -19,9 +19,9 @@ const DepartmentController = {
       const department = await Department.findOne({ slug: req.params.slug });
       if (!department) return res.status(404).json({ message: 'Department not found' });
 
-      // Fetch interest groups for this department, populating IGL TeamMember
+      // Fetch interest groups for this department, populating the lead expert account
       const interestGroups = await InterestGroup.find({ department: department._id })
-        .populate('igl', 'name role imageUrl github linkedin research')
+        .populate('igl', 'name role department avatarUrl github linkedin userId')
         .sort({ order: 1, name: 1 });
 
       res.json({ department, interestGroups });

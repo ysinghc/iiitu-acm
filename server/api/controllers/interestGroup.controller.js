@@ -1,6 +1,19 @@
 const mongoose = require('mongoose');
 const InterestGroup = require('../models/interestGroup.model');
-const InterestGroupMembership = require('../models/interestGroupMembership.model');
+const { resolveUser } = require('../../src/services/lookup');
+
+// Public lead profile fields (login accounts, never roster strings).
+const IGL_SELECT = 'name role department avatarUrl github linkedin userId';
+
+// IGL must be an active expert account — leads are logically connected,
+// never free-text names.
+async function resolveLead(igl) {
+  if (!igl) return null;
+  const lead = await resolveUser(igl);
+  if (!lead || !lead.isActive) throw new Error('Lead must be an existing account');
+  if (lead.role !== 'expert') throw new Error('Lead must be an expert account');
+  return lead._id;
+}
 
 const InterestGroupController = {
   // GET /api/public/interest-groups
@@ -8,7 +21,7 @@ const InterestGroupController = {
     try {
       const groups = await InterestGroup.find()
         .populate('department', 'slug name')
-        .populate('igl', 'name role imageUrl github linkedin research')
+        .populate('igl', IGL_SELECT)
         .sort({ order: 1, name: 1 });
       res.json(groups);
     } catch (err) {
@@ -23,7 +36,7 @@ const InterestGroupController = {
     }
     try {
       const groups = await InterestGroup.find({ department: req.params.departmentId })
-        .populate('igl', 'name role imageUrl github linkedin research')
+        .populate('igl', IGL_SELECT)
         .sort({ order: 1, name: 1 });
       res.json(groups);
     } catch (err) {
@@ -39,7 +52,7 @@ const InterestGroupController = {
     try {
       const group = await InterestGroup.findById(req.params.id)
         .populate('department', 'slug name')
-        .populate('igl', 'name role imageUrl github linkedin research');
+        .populate('igl', IGL_SELECT);
       if (!group) return res.status(404).json({ message: 'Interest group not found' });
       res.json(group);
     } catch (err) {
@@ -51,10 +64,11 @@ const InterestGroupController = {
   create: async (req, res) => {
     const { department, igl, name, description, areaOfInterest, order } = req.body;
     try {
-      const group = await InterestGroup.create({ department, igl: igl || null, name, description, areaOfInterest, order: order || 0 });
+      const leadId = await resolveLead(igl);
+      const group = await InterestGroup.create({ department, igl: leadId, name, description, areaOfInterest, order: order || 0 });
       const populated = await group.populate([
         { path: 'department', select: 'slug name' },
-        { path: 'igl', select: 'name role imageUrl github linkedin research' }
+        { path: 'igl', select: IGL_SELECT }
       ]);
       res.status(201).json(populated);
     } catch (err) {
@@ -69,13 +83,15 @@ const InterestGroupController = {
     }
     const { department, igl, name, description, areaOfInterest, order } = req.body;
     try {
+      const update = { department, name, description, areaOfInterest, order: order ?? 0 };
+      if (igl !== undefined) update.igl = await resolveLead(igl);
       const group = await InterestGroup.findByIdAndUpdate(
         req.params.id,
-        { department, igl: igl || null, name, description, areaOfInterest, order: order ?? 0 },
+        update,
         { returnDocument: 'after', runValidators: true }
       ).populate([
         { path: 'department', select: 'slug name' },
-        { path: 'igl', select: 'name role imageUrl github linkedin research' }
+        { path: 'igl', select: IGL_SELECT }
       ]);
       if (!group) return res.status(404).json({ message: 'Interest group not found' });
       res.json(group);
@@ -92,8 +108,6 @@ const InterestGroupController = {
     try {
       const group = await InterestGroup.findByIdAndDelete(req.params.id);
       if (!group) return res.status(404).json({ message: 'Interest group not found' });
-      // Also remove memberships for this group
-      await InterestGroupMembership.deleteMany({ interestGroup: req.params.id });
       res.json({ message: 'Interest group deleted' });
     } catch (err) {
       res.status(500).json({ error: err.message });

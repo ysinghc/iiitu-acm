@@ -9,6 +9,13 @@ node_modules/
 logs/
 *.log
 
+# Local upload storage (ephemeral backup only — Cloudinary is the store;
+# persistent disks don't exist on Vercel, so never commit these)
+uploads/
+
+# Email outbox log (contains temporary passwords — never commit)
+email.txt
+
 # OS & Editor files
 .DS_Store
 .idea/

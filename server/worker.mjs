@@ -2,6 +2,17 @@ import { Readable, Writable } from 'node:stream';
 
 let appInstance;
 
+const DEFAULT_ORIGINS = 'https://acmiiitu.in,https://www.acmiiitu.in';
+
+function allowedOrigins(env) {
+  const raw = (env && env.ALLOWED_ORIGINS) || DEFAULT_ORIGINS;
+  return raw.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+function isAllowed(origin, env) {
+  return !origin || allowedOrigins(env).includes(origin);
+}
+
 export default {
   async fetch(request, env, ctx) {
     if (env) {
@@ -10,8 +21,14 @@ export default {
 
     const requestOrigin = request.headers.get('origin');
 
-    // Handle OPTIONS preflight requests immediately for high performance and guaranteed CORS compliance
+    // Handle OPTIONS preflight: only the chapter domain gets CORS headers.
     if (request.method === 'OPTIONS') {
+      if (!isAllowed(requestOrigin, env)) {
+        return new Response(JSON.stringify({ error: { message: 'Origin not allowed' } }), {
+          status: 403,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
       const corsHeaders = new Headers();
       corsHeaders.set('Access-Control-Allow-Origin', requestOrigin || '*');
       corsHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
@@ -81,7 +98,7 @@ export default {
         res.on('finish', () => {
           const fullBody = Buffer.concat(responseChunks);
           const activeOrigin = requestOrigin || '*';
-          if (!resHeaders.has('access-control-allow-origin')) {
+          if (isAllowed(requestOrigin, env) && !resHeaders.has('access-control-allow-origin')) {
             resHeaders.set('Access-Control-Allow-Origin', activeOrigin);
             if (requestOrigin) {
               resHeaders.set('Access-Control-Allow-Credentials', 'true');

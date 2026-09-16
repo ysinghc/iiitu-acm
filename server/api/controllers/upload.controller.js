@@ -4,9 +4,17 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 
 // Ensure Cloudinary uses secure HTTPS URLs
-cloudinary.config({
-  secure: true
-});
+if (process.env.CLOUDINARY_URL) {
+  const match = process.env.CLOUDINARY_URL.match(/^cloudinary:\/\/([^:]+):([^@]+)@(.+)$/);
+  if (match) {
+    cloudinary.config({
+      api_key: match[1],
+      api_secret: match[2],
+      cloud_name: match[3],
+      secure: true
+    });
+  }
+}
 
 // Helper for dynamic sharp loading (prevents esbuild/wrangler from bundling native .node binaries on Cloudflare Workers)
 const getSharp = () => {
@@ -75,6 +83,14 @@ const handleImageUpload = (req, res) => {
         return res.json({
           message: 'Image uploaded and converted to WebP on Cloudinary successfully',
           imageUrl: cloudinaryResult.secure_url
+        });
+      }
+
+      // No persistent disk on serverless (Vercel): fail loudly with a fix,
+      // instead of a cryptic read-only-filesystem error from sharp/mkdir.
+      if (process.env.VERCEL) {
+        return res.status(500).json({
+          error: 'Image storage is not configured. Set CLOUDINARY_URL in the Vercel environment to enable uploads.'
         });
       }
 

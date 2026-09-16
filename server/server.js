@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
+const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
 require('dotenv').config();
 
 const connect = require('./db/connection');
@@ -34,6 +36,14 @@ const PORT = process.env.PORT || 5000;
 // Behind Vercel/CDN: trust the first proxy hop so req.ip (rate limiting,
 // logging) is the real client IP, not the proxy's.
 app.set('trust proxy', 1);
+
+// Hardened response headers. CSP and cross-origin policies stay OFF so
+// API-served images keep embedding on the chapter site.
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
 
 // 1. Origin allowlist — the API only speaks to the chapter domain.
 // Requests WITHOUT an Origin header (curl, health checks, server-to-server)
@@ -77,6 +87,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+app.use(cookieParser());
 
 // Global flood guard (IP-keyed; per-account limits sit on auth/upload routes).
 app.use(apiLimiter);

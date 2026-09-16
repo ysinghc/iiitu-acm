@@ -2,6 +2,7 @@ import React from 'react';
 import { API } from '../utils/apiURL';
 import { resolveImg } from '../utils/api';
 import { roleLabel, cap } from '../utils/roles';
+import { useFocusRefresh } from '../utils/useFocusRefresh';
 import { Page, Empty, Spinner } from '../components/ui';
 
 function PersonCard({ person, position }) {
@@ -67,12 +68,15 @@ export default function Team() {
   const [dir, setDir] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
 
-  React.useEffect(() => {
+  const load = React.useCallback(() => {
     fetch(`${API}/v1/users/directory`)
       .then((r) => r.json())
       .then((d) => { setDir(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
+
+  React.useEffect(() => { load(); }, [load]);
+  useFocusRefresh(load);
 
   if (loading) return <Spinner label="Loading team…" />;
 

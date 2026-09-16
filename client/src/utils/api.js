@@ -10,13 +10,21 @@ export function getToken() {
   return localStorage.getItem(TOKEN_KEY) || localStorage.getItem(LEGACY_TOKEN_KEY) || '';
 }
 
+// Sessions live in the httpOnly `acm_token` cookie (set by the API on
+// sign-in). We deliberately do NOT persist fresh tokens in localStorage —
+// anything JS-readable is XSS-stealable. Stored legacy tokens remain as a
+// fallback until they expire.
 export function setSession(token, user) {
-  localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
+  localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(LEGACY_TOKEN_KEY);
 }
 
 export function clearSession() {
+  // Best-effort server logout (clears the cookie); local state clears anyway.
+  try {
+    fetch(`${API}/v1/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+  } catch { /* offline — still clear local state below */ }
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(LEGACY_TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
@@ -41,6 +49,7 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
   const res = await fetch(path.startsWith('http') ? path : `${API}${path}`, {
     method,
     headers,
+    credentials: 'include',
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
@@ -66,6 +75,7 @@ export async function uploadImage(file) {
   const res = await fetch(`${API}/admin/upload`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
+    credentials: 'include',
     body: form,
   });
   const data = await res.json().catch(() => ({}));

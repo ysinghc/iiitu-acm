@@ -26,8 +26,8 @@ const update = asyncHandler(async (req, res) => {
 });
 
 const remove = asyncHandler(async (req, res) => {
-  const user = await service.deactivate(req.user, req.params.id);
-  res.json({ user, message: 'Account deactivated' });
+  const result = await service.deactivate(req.user, req.params.id);
+  res.json({ ...result, message: 'Account permanently deleted' });
 });
 
 module.exports = { directory, list, mentees, get, update, remove };

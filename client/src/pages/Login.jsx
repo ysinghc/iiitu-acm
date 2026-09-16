@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { Card, Field, TextInput, Select, PrimaryButton, ErrorNote, SuccessNote } from '../components/ui';
+import Recaptcha from '../components/Recaptcha';
 
 const SIGNUP_ROLES = [
   { value: 'member', label: 'Member' },
@@ -19,6 +20,8 @@ export default function Login() {
   const [error, setError] = React.useState('');
   const [info, setInfo] = React.useState('');
   const [busy, setBusy] = React.useState(false);
+  const [captcha, setCaptcha] = React.useState('');
+  const [captchaKey, setCaptchaKey] = React.useState(0);
 
   React.useEffect(() => {
     api.get('/public/departments', { auth: false })
@@ -44,10 +47,10 @@ export default function Login() {
     setBusy(true);
     try {
       if (mode === 'forgot') {
-        await api.post('/v1/auth/forgot-password', { email: form.email.trim() }, { auth: false });
+        await api.post('/v1/auth/forgot-password', { email: form.email.trim(), captchaToken: captcha }, { auth: false });
         setInfo('If an account exists for this email, a reset link was sent.');
       } else if (mode === 'login') {
-        await login(form.email.trim(), form.password);
+        await login(form.email.trim(), form.password, captcha);
         navigate('/dashboard');
         return;
       } else {
@@ -58,6 +61,7 @@ export default function Login() {
           role: form.role,
           department: form.role === 'member' ? '' : form.department,
           batch: form.batch.trim(),
+          captchaToken: captcha,
         });
       }
       navigate('/dashboard');
@@ -65,6 +69,9 @@ export default function Login() {
       setError(err.message);
     } finally {
       setBusy(false);
+      // Tokens redeem once — refresh the widget for any retry.
+      setCaptcha('');
+      setCaptchaKey((k) => k + 1);
     }
   };
 
@@ -133,6 +140,7 @@ export default function Login() {
               </Field>
             </>
           )}
+          <Recaptcha key={`${mode}-${captchaKey}`} onToken={setCaptcha} />
           <PrimaryButton type="submit" disabled={busy} className="w-full">
             {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : mode === 'forgot' ? 'Send reset link' : 'Create account'}
           </PrimaryButton>

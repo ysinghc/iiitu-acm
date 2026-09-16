@@ -1,12 +1,15 @@
 const express = require('express');
 const DepartmentController = require('../controllers/department.controller');
 const authenticateAdmin = require('../middlewares/authenticate');
-const { requireManageContent } = require('../middlewares/roles');
+const { requireManageContent, requireManageVerticals } = require('../middlewares/roles');
 const router = express.Router();
 
-// Public
+// Public (public departments only — private ones stay off the site)
 router.get('/api/public/departments', DepartmentController.getAll);
 router.get('/api/public/departments/:slug', DepartmentController.getBySlug);
+
+// Admin (sees everything, including private placement departments)
+router.get('/api/admin/departments/all', authenticateAdmin, requireManageVerticals, DepartmentController.getAllAdmin);
 
 // Admin
 router.post('/api/admin/departments', authenticateAdmin, requireManageContent, DepartmentController.create);

@@ -2,6 +2,7 @@ import React from 'react';
 import { API } from '../utils/apiURL';
 import { resolveImg } from '../utils/api';
 import { roleLabel, cap } from '../utils/roles';
+import { useFocusRefresh } from '../utils/useFocusRefresh';
 import { Page, Empty, Spinner, TextInput } from '../components/ui';
 
 export default function Members() {
@@ -9,12 +10,15 @@ export default function Members() {
   const [q, setQ] = React.useState('');
   const [loading, setLoading] = React.useState(true);
 
-  React.useEffect(() => {
+  const load = React.useCallback(() => {
     fetch(`${API}/v1/users/directory`)
       .then((r) => r.json())
       .then((d) => { setMembers(d.members || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
+
+  React.useEffect(() => { load(); }, [load]);
+  useFocusRefresh(load);
 
   const t = q.toLowerCase();
   const filtered = members.filter((m) =>

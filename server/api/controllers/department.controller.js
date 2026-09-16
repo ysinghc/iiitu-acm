@@ -3,8 +3,19 @@ const Department = require('../models/department.model');
 const InterestGroup = require('../models/interestGroup.model');
 
 const DepartmentController = {
-  // GET /api/public/departments
+  // GET /api/public/departments — public departments only. Private ones
+  // exist for placement and never leak onto the Verticals pages.
   getAll: async (req, res) => {
+    try {
+      const departments = await Department.find({ visibility: { $ne: 'private' } }).sort({ slug: 1 });
+      res.json(departments);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  // GET /api/admin/departments/all — every department, for management UIs.
+  getAllAdmin: async (req, res) => {
     try {
       const departments = await Department.find().sort({ slug: 1 });
       res.json(departments);
@@ -17,7 +28,9 @@ const DepartmentController = {
   getBySlug: async (req, res) => {
     try {
       const department = await Department.findOne({ slug: req.params.slug });
-      if (!department) return res.status(404).json({ message: 'Department not found' });
+      if (!department || department.visibility === 'private') {
+        return res.status(404).json({ message: 'Department not found' });
+      }
 
       // Fetch interest groups for this department, populating the lead expert account
       const interestGroups = await InterestGroup.find({ department: department._id })
@@ -32,9 +45,12 @@ const DepartmentController = {
 
   // POST /api/admin/departments
   create: async (req, res) => {
-    const { slug, name, description, bannerImageUrl, mission } = req.body;
+    const { slug, name, description, bannerImageUrl, mission, visibility } = req.body;
     try {
-      const department = await Department.create({ slug, name, description, bannerImageUrl, mission });
+      const department = await Department.create({
+        slug, name, description, bannerImageUrl, mission,
+        visibility: visibility === 'private' ? 'private' : 'public',
+      });
       res.status(201).json(department);
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -46,11 +62,13 @@ const DepartmentController = {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid department ID format' });
     }
-    const { slug, name, description, bannerImageUrl, mission } = req.body;
+    const { slug, name, description, bannerImageUrl, mission, visibility } = req.body;
     try {
+      const update = { slug, name, description, bannerImageUrl, mission };
+      if (visibility !== undefined) update.visibility = visibility === 'private' ? 'private' : 'public';
       const department = await Department.findByIdAndUpdate(
         req.params.id,
-        { slug, name, description, bannerImageUrl, mission },
+        update,
         { returnDocument: 'after', runValidators: true }
       );
       if (!department) return res.status(404).json({ message: 'Department not found' });

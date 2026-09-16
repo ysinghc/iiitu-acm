@@ -53,6 +53,9 @@ const UserSchema = new mongoose.Schema(
       tokenHash: { type: String, default: '' },
       expiresAt: { type: Date, default: null },
     },
+    // Bumped on password/role changes — instantly invalidates every
+    // previously issued token (logout-everywhere semantics).
+    tokenVersion: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
@@ -63,6 +66,7 @@ UserSchema.index({ mentor: 1 });
 UserSchema.methods.toSafeJSON = function toSafeJSON() {
   const obj = this.toObject({ versionKey: false });
   delete obj.passwordHash;
+  delete obj.passwordReset; // reset token hashes must never leave the server
   return obj;
 };
 

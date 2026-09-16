@@ -6,6 +6,9 @@ const DepartmentSchema = new mongoose.Schema({
   description: { type: String, default: '' },
   bannerImageUrl: { type: String, default: '' },
   mission: { type: String, default: '' },
+  // Private departments never appear on the public Verticals pages — they
+  // exist only for placement (member assignment, HoD scope, reports).
+  visibility: { type: String, enum: ['public', 'private'], default: 'public' },
 }, { timestamps: true });
 
 const Department = mongoose.model('Department', DepartmentSchema);

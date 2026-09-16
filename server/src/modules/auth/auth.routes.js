@@ -8,13 +8,15 @@ const {
   forgotLimiter,
   resetLimiter,
 } = require('../../middlewares/rateLimit');
+const { requireCaptcha } = require('../../middlewares/requireCaptcha');
 
 const router = express.Router();
 
-router.post('/register', registerLimiter, controller.register);
-router.post('/login', loginLimiter, controller.login);
-router.post('/forgot-password', forgotLimiter, controller.forgotPassword);
-router.post('/reset-password', resetLimiter, controller.resetPassword);
+router.post('/register', registerLimiter, requireCaptcha('register'), controller.register);
+router.post('/login', loginLimiter, requireCaptcha('login'), controller.login);
+router.post('/logout', controller.logout);
+router.post('/forgot-password', forgotLimiter, requireCaptcha('forgot'), controller.forgotPassword);
+router.post('/reset-password', resetLimiter, requireCaptcha('reset'), controller.resetPassword);
 
 router.get('/me', authenticate, controller.me);
 router.patch('/me', authenticate, controller.updateMe);

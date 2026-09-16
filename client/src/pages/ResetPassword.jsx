@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { Card, Field, TextInput, PrimaryButton, ErrorNote, SuccessNote } from '../components/ui';
+import Recaptcha from '../components/Recaptcha';
 
 export default function ResetPassword() {
   const [params] = useSearchParams();
@@ -11,19 +12,23 @@ export default function ResetPassword() {
   const [error, setError] = React.useState('');
   const [done, setDone] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
+  const [captcha, setCaptcha] = React.useState('');
+  const [captchaKey, setCaptchaKey] = React.useState(0);
 
   const submit = async (e) => {
     e.preventDefault();
     setError('');
     setBusy(true);
     try {
-      await api.post('/v1/auth/reset-password', { token, newPassword: password }, { auth: false });
+      await api.post('/v1/auth/reset-password', { token, newPassword: password, captchaToken: captcha }, { auth: false });
       setDone(true);
       setTimeout(() => navigate('/login'), 2500);
     } catch (err) {
       setError(err.message);
     } finally {
       setBusy(false);
+      setCaptcha('');
+      setCaptchaKey((k) => k + 1);
     }
   };
 
@@ -43,6 +48,7 @@ export default function ResetPassword() {
             <Field label="New password">
               <TextInput required type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
             </Field>
+            <Recaptcha key={captchaKey} onToken={setCaptcha} />
             <PrimaryButton type="submit" disabled={busy} className="w-full">
               {busy ? 'Please wait…' : 'Reset password'}
             </PrimaryButton>

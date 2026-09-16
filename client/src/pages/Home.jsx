@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import HeroCarousel from '../components/HeroCarousel';
 import { API } from '../utils/apiURL';
+import { useFocusRefresh } from '../utils/useFocusRefresh';
 
 function MessageCard({ msg, reversed = false }) {
   return (
@@ -50,23 +51,23 @@ export default function Home() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [slidesRes, messagesRes] = await Promise.all([
-          fetch(`${API}/public/carousel`),
-          fetch(`${API}/public/messages`)
-        ]);
-        setSlides(await slidesRes.json());
-        setMessages(await messagesRes.json());
-      } catch (err) {
-        console.error('Error fetching data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+  const fetchData = React.useCallback(async () => {
+    try {
+      const [slidesRes, messagesRes] = await Promise.all([
+        fetch(`${API}/public/carousel`),
+        fetch(`${API}/public/messages`)
+      ]);
+      setSlides(await slidesRes.json());
+      setMessages(await messagesRes.json());
+    } catch (err) {
+      console.error('Error fetching data:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+  useFocusRefresh(fetchData);
 
   if (loading) {
     return (

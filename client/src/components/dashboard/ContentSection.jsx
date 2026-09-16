@@ -24,10 +24,12 @@ const ENTITIES = {
   },
   departments: {
     label: 'Departments',
-    list: '/public/departments', write: (id) => `/admin/departments${id ? `/${id}` : ''}`,
+    list: '/api/admin/departments/all', write: (id) => `/admin/departments${id ? `/${id}` : ''}`,
+    hint: 'Private departments stay off the public site — placement only. Management uses the full list.',
     fields: [
       { k: 'slug', label: 'Slug', t: 'text', req: true },
       { k: 'name', label: 'Name', t: 'text', req: true },
+      { k: 'visibility', label: 'Visibility', t: 'select', options: [['public', 'Public — listed on site'], ['private', 'Private — placement only']] },
       { k: 'description', label: 'Description', t: 'textarea' },
       { k: 'mission', label: 'Mission', t: 'textarea' },
       { k: 'bannerImageUrl', label: 'Banner', t: 'image' },
@@ -73,7 +75,9 @@ function FieldInput({ f, value, onChange, depts, experts }) {
       <Select value={current} onChange={(e) => onChange(e.target.value || null)}>
         <option value="">— No lead —</option>
         {(experts || []).map((e) => (
-          <option key={e._id} value={e._id}>{e.name}{e.userId ? ` (${e.userId})` : ''}</option>
+          <option key={e._id} value={e._id}>
+            {e.name}{e.userId ? ` (${e.userId})` : ''}{e.role === 'hod' ? ' · HoD' : ''}
+          </option>
         ))}
       </Select>
     );
@@ -89,7 +93,7 @@ function EntityManager({ id, depts, experts, notify }) {
 
   const load = React.useCallback(async () => {
     try {
-      const data = await api.get(cfg.list, { auth: false });
+      const data = await api.get(cfg.list);
       setItems(Array.isArray(data) ? data : []);
     } catch (e) {
       notify(e.message, true);
@@ -230,8 +234,11 @@ export default function ContentSection() {
   }, []);
 
   React.useEffect(() => {
-    api.get('/public/departments', { auth: false }).then((d) => setDepts(Array.isArray(d) ? d : [])).catch(() => {});
-    api.get('/v1/users?role=expert&limit=100').then((d) => setExperts(d.items || [])).catch(() => {});
+    api.get('/api/admin/departments/all').then((d) => setDepts(Array.isArray(d) ? d : [])).catch(() => {});
+    Promise.all([
+      api.get('/v1/users?role=expert&limit=100').catch(() => ({ items: [] })),
+      api.get('/v1/users?role=hod&limit=100').catch(() => ({ items: [] })),
+    ]).then(([ex, hod]) => setExperts([...(ex.items || []), ...(hod.items || [])])).catch(() => {});
   }, []);
 
   const canContent = ['chair', 'vice_chair', 'secretary', 'treasurer', 'hod'].includes(user.role);

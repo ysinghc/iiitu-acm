@@ -2,6 +2,7 @@ import React from 'react';
 import { Calendar, MapPin, Clock, ExternalLink } from 'lucide-react';
 import { API } from '../utils/apiURL';
 import { resolveImg } from '../utils/api';
+import { useFocusRefresh } from '../utils/useFocusRefresh';
 import { Page, Badge, Empty, Spinner } from '../components/ui';
 
 function fmtDate(ev) {
@@ -16,26 +17,27 @@ export default function Events() {
   const [loading, setLoading] = React.useState(true);
   const [filter, setFilter] = React.useState('upcoming');
 
-  React.useEffect(() => {
-    (async () => {
-      try {
-        // Prefer the v1 workflow-aware listing; fall back to legacy.
-        const v1 = await fetch(`${API}/v1/events?limit=50`).then((r) => r.json());
-        if (v1.items) setEvents(v1.items);
-        else {
-          const legacy = await fetch(`${API}/public/events`).then((r) => r.json());
-          setEvents(Array.isArray(legacy) ? legacy : []);
-        }
-      } catch {
-        try {
-          const legacy = await fetch(`${API}/public/events`).then((r) => r.json());
-          setEvents(Array.isArray(legacy) ? legacy : []);
-        } catch { /* offline */ }
-      } finally {
-        setLoading(false);
+  const load = React.useCallback(async () => {
+    try {
+      // Prefer the v1 workflow-aware listing; fall back to legacy.
+      const v1 = await fetch(`${API}/v1/events?limit=50`).then((r) => r.json());
+      if (v1.items) setEvents(v1.items);
+      else {
+        const legacy = await fetch(`${API}/public/events`).then((r) => r.json());
+        setEvents(Array.isArray(legacy) ? legacy : []);
       }
-    })();
+    } catch {
+      try {
+        const legacy = await fetch(`${API}/public/events`).then((r) => r.json());
+        setEvents(Array.isArray(legacy) ? legacy : []);
+      } catch { /* offline */ }
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  React.useEffect(() => { load(); }, [load]);
+  useFocusRefresh(load);
 
   const upcoming = events.filter((e) => e.status !== 'completed');
   const past = events.filter((e) => e.status === 'completed');

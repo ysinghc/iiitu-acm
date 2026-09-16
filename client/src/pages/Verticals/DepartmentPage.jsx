@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Code2, FlaskConical, ExternalLink, Users, ChevronLeft, Link2 } from 'lucide-react';
 import { API } from '../../utils/apiURL';
+import { useFocusRefresh } from '../../utils/useFocusRefresh';
 
 const deptMeta = {
   engineering: {
@@ -150,7 +151,7 @@ export default function DepartmentPage() {
 
   const meta = deptMeta[slug] || deptMeta.engineering;
 
-  useEffect(() => {
+  const load = React.useCallback(() => {
     setLoading(true);
     fetch(`${API}/public/departments/${slug}`)
       .then(r => {
@@ -167,6 +168,9 @@ export default function DepartmentPage() {
         setLoading(false);
       });
   }, [slug]);
+
+  useEffect(() => { load(); }, [load]);
+  useFocusRefresh(load);
 
   if (loading) {
     return (

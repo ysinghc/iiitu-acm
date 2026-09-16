@@ -14,14 +14,15 @@ const LEGACY_SECRET = process.env.JWT_SECRET || 'super_secret_acm_key_123';
 const CHAPTER_SECRET = process.env.JWT_SECRET || 'super_secret_acm_key_123';
 
 function authenticateAdmin(req, res, next) {
+  const fromCookie = req.cookies && req.cookies.acm_token;
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  const token = fromCookie
+    || (authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null);
+  if (!token) {
     return res.status(401).json({ message: 'No token provided' });
   }
-  const token = authHeader.split(' ')[1];
 
-  // 1. New chapter token (checked first; lazily requires the User model so
-  //    serverless bundling and route loading never break on import).
+  // 1. New chapter token (cookie or header), with session-version check.
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'change-me-in-production');
     if (decoded && decoded.sub) {
@@ -30,6 +31,9 @@ function authenticateAdmin(req, res, next) {
         .then((user) => {
           if (!user || !user.isActive) {
             return res.status(401).json({ message: 'Invalid or expired token' });
+          }
+          if ((decoded.tv ?? 0) !== (user.tokenVersion || 0)) {
+            return res.status(401).json({ message: 'Session revoked. Please sign in again.' });
           }
           req.user = user;
           req.auth = { userId: String(user._id), role: user.role, legacy: false };

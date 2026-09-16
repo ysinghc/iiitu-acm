@@ -159,6 +159,10 @@ async function adminUpdate(actor, id, patch) {
   if (update.role && !Object.values(ROLES).includes(update.role)) {
     throw ApiError.badRequest('Invalid role');
   }
+  if (update.role && update.role !== target.role) {
+    // Privilege changes apply to the NEXT sign-in, never to live sessions.
+    target.tokenVersion = (target.tokenVersion || 0) + 1;
+  }
 
   Object.assign(target, update);
   await target.save();
@@ -166,17 +170,19 @@ async function adminUpdate(actor, id, patch) {
 }
 
 async function deactivate(actor, id) {
-  if (!isExec(actor.role)) throw ApiError.forbidden('Only the executive board can deactivate accounts');
+  if (!isExec(actor.role)) throw ApiError.forbidden('Only the executive board can delete accounts');
   const target = await resolveUser(id);
   if (!target) throw ApiError.notFound('User not found');
-  if (String(target._id) === String(actor._id)) throw ApiError.badRequest('You cannot deactivate your own account');
+  if (String(target._id) === String(actor._id)) throw ApiError.badRequest('You cannot delete your own account');
   if (target.role === ROLES.CHAIR) {
     const chairs = await User.countDocuments({ role: ROLES.CHAIR, isActive: true });
-    if (chairs <= 1) throw ApiError.badRequest('Cannot deactivate the last active chair');
+    if (chairs <= 1) throw ApiError.badRequest('Cannot delete the last active chair');
   }
-  target.isActive = false;
-  await target.save();
-  return target.toSafeJSON();
+  await target.deleteOne();
+  // Authored content (events, reports, notifications) stays but becomes
+  // unattributed — its populated author fields resolve to null, which every
+  // UI already renders as a fallback.
+  return { id: String(target._id), deleted: true };
 }
 
 /** Mentees visible to the caller: expert -> own; hod -> dept learners; exec -> all learners. */

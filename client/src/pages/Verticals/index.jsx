@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, FolderKanban } from 'lucide-react';
 import { API } from '../../utils/apiURL';
+import { useFocusRefresh } from '../../utils/useFocusRefresh';
 
 function SkeletonCard() {
   return (
@@ -28,39 +29,39 @@ export default function Verticals() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [deptsRes, igsRes] = await Promise.all([
-          fetch(`${API}/public/departments`),
-          fetch(`${API}/public/interest-groups`),
-        ]);
+  const fetchData = React.useCallback(async () => {
+    try {
+      const [deptsRes, igsRes] = await Promise.all([
+        fetch(`${API}/public/departments`),
+        fetch(`${API}/public/interest-groups`),
+      ]);
 
-        if (!deptsRes.ok) throw new Error('Failed to fetch departments');
+      if (!deptsRes.ok) throw new Error('Failed to fetch departments');
 
-        const depts = await deptsRes.json();
-        setDepartments(depts);
+      const depts = await deptsRes.json();
+      setDepartments(depts);
 
-        if (igsRes.ok) {
-          const igs = await igsRes.json();
-          const grouped = {};
-          for (const ig of igs) {
-            const deptId = ig.department?._id || ig.department;
-            if (!deptId) continue;
-            if (!grouped[deptId]) grouped[deptId] = [];
-            grouped[deptId].push(ig.name);
-          }
-          setGroupsByDept(grouped);
+      if (igsRes.ok) {
+        const igs = await igsRes.json();
+        const grouped = {};
+        for (const ig of igs) {
+          const deptId = ig.department?._id || ig.department;
+          if (!deptId) continue;
+          if (!grouped[deptId]) grouped[deptId] = [];
+          grouped[deptId].push(ig.name);
         }
-      } catch (err) {
-        console.error(err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
+        setGroupsByDept(grouped);
       }
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    fetchData();
   }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+  useFocusRefresh(fetchData);
 
   return (
     <div className="flex-1 flex flex-col bg-bg-primary transition-colors duration-300">

@@ -15,6 +15,12 @@ export default function PeopleSection() {
   const { user } = useAuth();
   const [params] = useSearchParams();
   const [q, setQ] = React.useState(params.get('q') || '');
+
+  // Follow ?q= navigation (e.g. roster deep-links) without clobbering typing.
+  React.useEffect(() => {
+    const v = params.get('q');
+    if (v !== null) setQ(v);
+  }, [params]);
   const [role, setRole] = React.useState('');
   const [people, setPeople] = React.useState([]);
   const [experts, setExperts] = React.useState([]);
@@ -55,7 +61,7 @@ export default function PeopleSection() {
     api.get('/public/interest-groups', { auth: false })
       .then((d) => setGroups(Array.isArray(d) ? d : []))
       .catch(() => {});
-    api.get('/public/departments', { auth: false })
+    api.get('/api/admin/departments/all')
       .then((d) => setDepts(Array.isArray(d) ? d : []))
       .catch(() => {});
   }, [canManage]);
@@ -89,11 +95,11 @@ export default function PeopleSection() {
   };
 
   const deactivate = async (id, name) => {
-    if (!window.confirm(`Deactivate ${name}? They will lose access.`)) return;
+    if (!window.confirm(`Permanently delete ${name}'s account? Their authored content stays but becomes unattributed.`)) return;
     setErr(''); setMsg('');
     try {
       await api.del(`/v1/users/${id}`);
-      setMsg('Account deactivated.');
+      setMsg('Account permanently deleted.');
       load();
     } catch (e2) {
       setErr(e2.message);
@@ -129,7 +135,9 @@ export default function PeopleSection() {
             </Select>
             <Select value={invite.department} onChange={(e) => setInvite({ ...invite, department: e.target.value })}>
               <option value="">No department</option>
-              {depts.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)}
+              {depts.map((d) => (
+                <option key={d.slug} value={d.slug}>{d.name}{d.visibility === 'private' ? ' (private)' : ''}</option>
+              ))}
             </Select>
             <PrimaryButton type="submit" className="!text-xs">Send invite</PrimaryButton>
           </form>
@@ -220,7 +228,9 @@ function PersonRow({ person: p, me, canManage, isExec, experts, groups, depts, e
         <Field label="Department">
           <Select value={patch.department} onChange={(e) => setPatch({ ...patch, department: e.target.value })}>
             <option value="">No department</option>
-            {depts.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)}
+            {depts.map((d) => (
+              <option key={d.slug} value={d.slug}>{d.name}{d.visibility === 'private' ? ' (private)' : ''}</option>
+            ))}
             {p.department && !depts.some((d) => d.slug === p.department) && (
               <option value={p.department}>{p.department} (removed)</option>
             )}
@@ -262,7 +272,7 @@ function PersonRow({ person: p, me, canManage, isExec, experts, groups, depts, e
           Save
         </PrimaryButton>
         <GhostButton className="!px-3 !py-1.5 !text-xs" onClick={onCancel}>Cancel</GhostButton>
-        {isExec && <DangerButton onClick={() => onDeactivate(p._id, p.name)}>Deactivate</DangerButton>}
+        {isExec && <DangerButton onClick={() => onDeactivate(p._id, p.name)}>Delete</DangerButton>}
       </div>
     </div>
   );

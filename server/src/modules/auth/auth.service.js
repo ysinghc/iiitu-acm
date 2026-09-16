@@ -142,6 +142,7 @@ async function changePassword(userId, { currentPassword, newPassword }) {
   const ok = await bcrypt.compare(currentPassword || '', user.passwordHash);
   if (!ok) throw ApiError.unauthorized('Current password is incorrect');
   user.passwordHash = await bcrypt.hash(newPassword, 10);
+  user.tokenVersion = (user.tokenVersion || 0) + 1; // kill all other sessions
   await user.save();
   return { ok: true };
 }
@@ -193,6 +194,7 @@ async function resetPassword(token, newPassword) {
   if (!user || !user.isActive) throw ApiError.badRequest('Reset link is invalid or expired');
   user.passwordHash = await bcrypt.hash(String(newPassword), 10);
   user.passwordReset = { tokenHash: '', expiresAt: null };
+  user.tokenVersion = (user.tokenVersion || 0) + 1; // stolen sessions die with the reset
   await user.save();
   return { ok: true };
 }

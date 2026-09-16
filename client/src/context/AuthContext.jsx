@@ -27,8 +27,8 @@ export function AuthProvider({ children }) {
     else setLoading(false);
   }, [refresh]);
 
-  const login = useCallback(async (email, password) => {
-    const data = await api.post('/v1/auth/login', { email, password }, { auth: false });
+  const login = useCallback(async (email, password, captchaToken) => {
+    const data = await api.post('/v1/auth/login', { email, password, captchaToken }, { auth: false });
     setSession(data.token, data.user);
     setUser(data.user);
     return data.user;

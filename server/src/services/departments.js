@@ -25,15 +25,15 @@ async function getDepartmentSlugs() {
   return [...DEPARTMENTS];
 }
 
-/** Full records for dropdowns: [{ slug, name }]. */
+/** Full records for dropdowns: [{ slug, name, visibility }]. */
 async function getDepartments() {
   try {
-    const docs = await Department.find({}).select('slug name').sort({ slug: 1 }).lean();
+    const docs = await Department.find({}).select('slug name visibility').sort({ slug: 1 }).lean();
     if (docs.length > 0) return docs;
   } catch {
     // fall through
   }
-  return DEPARTMENTS.map((slug) => ({ slug, name: slug }));
+  return DEPARTMENTS.map((slug) => ({ slug, name: slug, visibility: 'public' }));
 }
 
 /** Empty string means "no department" and is always allowed. */

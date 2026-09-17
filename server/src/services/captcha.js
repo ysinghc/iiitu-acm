@@ -23,7 +23,11 @@ function expectedHostnames() {
   if (fromEnv.length > 0) return new Set(fromEnv);
   // Fallback: every origin the API itself serves (prod default is the
   // chapter domain, so www + apex are covered without extra config).
-  const fromCors = (process.env.ALLOWED_ORIGINS || '')
+  // NOTE: mirrors the CORS default in server.js — keep the two in sync.
+  const rawCors = process.env.ALLOWED_ORIGINS || (process.env.NODE_ENV === 'production'
+    ? 'https://acmiiitu.in,https://www.acmiiitu.in'
+    : '');
+  const fromCors = rawCors
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
@@ -79,11 +83,13 @@ async function verifyCaptcha(token, { remoteip } = {}) {
   }
 
   if (!result || result.success !== true) {
+    console.warn('[captcha] rejected by google:', JSON.stringify(result && result['error-codes']));
     return { ok: false, reason: 'invalid-captcha', codes: result && result['error-codes'] };
   }
   const hosts = expectedHostnames();
   const got = String(result.hostname || '').toLowerCase();
   if (hosts.size > 0 && !hosts.has(got)) {
+    console.warn(`[captcha] hostname mismatch: token from "${got}", expecting one of [${[...hosts].join(', ')}]`);
     return { ok: false, reason: 'hostname-mismatch' };
   }
   return { ok: true };

@@ -35,10 +35,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   const register = useCallback(async (payload) => {
-    const data = await api.post('/v1/auth/register', payload, { auth: false });
-    setSession(data.token, data.user);
-    setUser(data.user);
-    return data.user;
+    // Public signup is disabled (invite-only). Kept as a stub so any stale
+    // caller fails with a clear message instead of hitting a removed route.
+    throw new Error('Public signup is disabled. Please ask an exec member, HoD or expert to invite you.');
   }, []);
 
   const logout = useCallback(() => {

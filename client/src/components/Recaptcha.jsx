@@ -4,8 +4,9 @@ import React from 'react';
  * Google reCAPTCHA v2 checkbox (explicit render).
  * Hands the single-use token to the parent via onToken.
  * Remount (change `key`) after every submit attempt — tokens redeem once.
- * Without VITE_RECAPTCHA_SITE_KEY it renders nothing (local dev relies on
- * the backend dev-bypass; production backend rejects missing tokens).
+ * Renders a configuration warning when VITE_RECAPTCHA_SITE_KEY is missing
+ * instead of silently rendering nothing (which previously caused confusing
+ * "CAPTCHA verification required" errors on login).
  */
 const SITEKEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
 
@@ -30,6 +31,7 @@ export default function Recaptcha({ onToken }) {
   const idRef = React.useRef(null);
   const cbRef = React.useRef(onToken);
   cbRef.current = onToken;
+  const [loadError, setLoadError] = React.useState('');
 
   React.useEffect(() => {
     if (!SITEKEY) return;
@@ -38,18 +40,21 @@ export default function Recaptcha({ onToken }) {
       () => {
         if (!alive || !ref.current || !window.grecaptcha) return;
         try {
+          // Skip re-render if this node was already claimed (StrictMode remount).
+          if (ref.current.dataset.rendered === '1') return;
           idRef.current = window.grecaptcha.render(ref.current, {
             sitekey: SITEKEY,
-            theme: 'auto',
+            theme: 'light',
             callback: (token) => cbRef.current && cbRef.current(token),
             'expired-callback': () => cbRef.current && cbRef.current(''),
             'error-callback': () => cbRef.current && cbRef.current(''),
           });
+          ref.current.dataset.rendered = '1';
         } catch {
           // already rendered on this node (strict-mode remount) — ignore
         }
       },
-      () => {}
+      () => { if (alive) setLoadError('Captcha failed to load. Check your connection and reload.'); }
     );
     return () => {
       alive = false;
@@ -60,6 +65,17 @@ export default function Recaptcha({ onToken }) {
     };
   }, []);
 
-  if (!SITEKEY) return null;
-  return <div ref={ref} className="flex justify-center" />;
+  if (!SITEKEY) {
+    return (
+      <p className="text-[11px] text-amber-600 dark:text-amber-400 text-center">
+        Captcha is not configured. Please contact the administrator.
+      </p>
+    );
+  }
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div ref={ref} className="flex justify-center" />
+      {loadError && <p className="text-[11px] text-red-500">{loadError}</p>}
+    </div>
+  );
 }

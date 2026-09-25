@@ -12,7 +12,14 @@ const { requireCaptcha } = require('../../middlewares/requireCaptcha');
 
 const router = express.Router();
 
-router.post('/register', registerLimiter, requireCaptcha('register'), controller.register);
+// Public self-signup is disabled — all accounts are invite-only via POST /users.
+// Kept as an explicit 403 (instead of deleting the route) so old clients get
+// a clear message rather than a 404.
+router.post('/register', registerLimiter, (req, res) => {
+  res.status(403).json({
+    error: 'Public signup is disabled. Please ask an exec member, HoD or expert to invite you.',
+  });
+});
 router.post('/login', loginLimiter, requireCaptcha('login'), controller.login);
 router.post('/logout', controller.logout);
 router.post('/forgot-password', forgotLimiter, requireCaptcha('forgot'), controller.forgotPassword);

@@ -16,7 +16,8 @@ const env = {
   mongoUri: pick('MONGODB_URI', ''),
   jwtSecret: pick('JWT_SECRET', 'change-me-in-production'),
   jwtExpiresIn: pick('JWT_EXPIRES_IN', '8h'),
-  clientUrl: pick('CLIENT_URL', 'http://localhost:5173'),
+  // Trailing slashes break exact origin matching and double up link paths.
+  clientUrl: (pick('CLIENT_URL', 'http://localhost:5173') || '').replace(/\/+$/, ''),
 
   // Outgoing mail (SMTP). When absent, mailer logs instead of sending.
   smtp: {

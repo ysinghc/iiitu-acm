@@ -56,10 +56,25 @@ const ALLOWED_ORIGINS = (
     : 'http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,https://acmiiitu.in,https://www.acmiiitu.in')
 )
   .split(',')
-  .map((s) => s.trim())
+  .map((s) => s.trim().replace(/\/+$/, ''))
   .filter(Boolean);
 
-const isAllowedOrigin = (origin) => !origin || ALLOWED_ORIGINS.includes(origin);
+// Loopback (dev machines) is trustworthy: in non-production any localhost
+// origin passes regardless of port, so Vite picking :5174 vs :5173 can never
+// 403 the dashboard again. Production still requires exact allowlist hits.
+const isLoopbackOrigin = (origin) => {
+  try {
+    const host = new URL(origin).hostname.toLowerCase();
+    return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+  } catch {
+    return false;
+  }
+};
+
+const isAllowedOrigin = (origin) =>
+  !origin ||
+  (process.env.NODE_ENV !== 'production' && isLoopbackOrigin(origin)) ||
+  ALLOWED_ORIGINS.includes(origin);
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;

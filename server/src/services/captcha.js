@@ -15,10 +15,24 @@
  */
 const VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify';
 
+function normalizeHostEntry(s) {
+  const t = String(s || '').trim().toLowerCase();
+  if (!t) return '';
+  // Accept both bare hostnames ("acmiiitu.in") and full origins/URLs
+  // ("http://localhost:5173/") — previous values mixed the two, which broke
+  // local verification with a hostname-mismatch.
+  try {
+    const withScheme = t.includes('://') ? t : `https://${t}`;
+    const u = new URL(withScheme);
+    if (u.hostname) return u.hostname.toLowerCase();
+  } catch { /* fall through */ }
+  return t.replace(/^https?:\/\//, '').split('/')[0].split(':')[0].trim();
+}
+
 function expectedHostnames() {
   const fromEnv = (process.env.RECAPTCHA_HOSTNAMES || '')
     .split(',')
-    .map((s) => s.trim().toLowerCase())
+    .map(normalizeHostEntry)
     .filter(Boolean);
   if (fromEnv.length > 0) return new Set(fromEnv);
   // Fallback: every origin the API itself serves (prod default is the
@@ -48,9 +62,20 @@ function expectedHostnames() {
 }
 
 async function verifyCaptcha(token, { remoteip } = {}) {
-  if (typeof token !== 'string' || token.length === 0 || token.length > 2048) {
+  if (typeof token !== 'string') {
     return { ok: false, reason: 'missing-token' };
   }
+  const t = token.trim();
+  // Google v2 tokens are typically ~500-2500 chars; the old 2048 cap
+  // wrongly rejected real tokens as "missing". 8k is plenty with margin.
+  if (t.length === 0) {
+    return { ok: false, reason: 'missing-token' };
+  }
+  if (t.length > 8192) {
+    console.warn(`[captcha] token too long (${t.length} chars) — rejecting`);
+    return { ok: false, reason: 'token-too-long' };
+  }
+  token = t;
   const secret = process.env.RECAPTCHA_SECRET || '';
   if (!secret) {
     if (process.env.NODE_ENV === 'production') {

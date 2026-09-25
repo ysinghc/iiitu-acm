@@ -205,7 +205,7 @@ export default function DepartmentPage() {
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
-        <div className="relative max-w-6xl mx-auto px-8 py-20">
+        <div className="relative max-w-7xl mx-auto px-8 py-20">
           <Link to="/verticals" className="inline-flex items-center gap-1.5 text-white/60 hover:text-white text-xs transition-colors mb-6">
             <ChevronLeft className="h-3.5 w-3.5" />
             All Departments
@@ -226,7 +226,7 @@ export default function DepartmentPage() {
 
       {/* Stats bar */}
       <div className="bg-bg-secondary border-b border-border-color">
-        <div className="max-w-6xl mx-auto px-8 py-5 flex flex-wrap gap-8">
+        <div className="max-w-7xl mx-auto px-8 py-5 flex flex-wrap gap-8">
           <div className="text-center">
             <p className="text-xl font-bold text-text-primary">{interestGroups.length}</p>
             <p className="text-[11px] text-text-tertiary uppercase tracking-wider">Interest Groups</p>
@@ -248,7 +248,7 @@ export default function DepartmentPage() {
       </div>
 
       {/* Interest Groups */}
-      <div className="max-w-6xl mx-auto px-8 py-14">
+      <div className="max-w-7xl mx-auto px-8 py-14">
         <div className="mb-10">
           <span className={`text-[10px] font-bold uppercase tracking-widest ${meta.accent}`}>Verticals</span>
           <h2 className="text-2xl font-bold text-text-primary mt-1">Interest Groups</h2>

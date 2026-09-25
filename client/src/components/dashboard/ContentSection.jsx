@@ -24,7 +24,7 @@ const ENTITIES = {
   },
   departments: {
     label: 'Departments',
-    list: '/api/admin/departments/all', write: (id) => `/admin/departments${id ? `/${id}` : ''}`,
+    list: '/admin/departments/all', write: (id) => `/admin/departments${id ? `/${id}` : ''}`,
     hint: 'Private departments stay off the public site — placement only. Management uses the full list.',
     fields: [
       { k: 'slug', label: 'Slug', t: 'text', req: true },
@@ -133,13 +133,13 @@ function EntityManager({ id, depts, experts, notify }) {
   const titleOf = (it) => it.name || it.title || it.slug || it._id;
 
   return (
-    <div>
-      {cfg.hint && <p className="text-[11px] text-text-tertiary mb-3">{cfg.hint}</p>}
-      <div className="divide-y divide-border-subtle mb-4">
+    <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 md:gap-5 items-start">
+      {cfg.hint && <p className="xl:col-span-5 text-[11px] text-text-tertiary">{cfg.hint}</p>}
+      <div className="xl:col-span-3 divide-y divide-border-subtle rounded-2xl border border-border-color bg-bg-primary px-4">
         {items.map((it) => (
-          <div key={it._id} className="flex items-center gap-3 py-2">
+          <div key={it._id} className="flex items-center gap-3 py-3">
             {(it.imageUrl || it.bannerImageUrl) && (
-              <img src={resolveImg(it.imageUrl || it.bannerImageUrl)} alt="" className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
+              <img src={resolveImg(it.imageUrl || it.bannerImageUrl)} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
             )}
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-text-primary truncate">{titleOf(it)}</p>
@@ -154,18 +154,20 @@ function EntityManager({ id, depts, experts, notify }) {
             <DangerButton onClick={() => remove(it._id)}>Delete</DangerButton>
           </div>
         ))}
-        {items.length === 0 && <Empty title="Nothing here yet" hint="Add the first item below." />}
+        {items.length === 0 && (
+          <div className="py-4"><Empty title="Nothing here yet" hint="Add the first item with the form." /></div>
+        )}
       </div>
 
-      <form onSubmit={save} className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-bg-primary border border-border-color">
+      <form onSubmit={save} className="xl:col-span-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3 p-4 rounded-2xl bg-bg-primary border border-border-color xl:sticky xl:top-20">
         {cfg.fields.map((f) => (
-          <div key={f.k} className={f.t === 'textarea' || f.t === 'image' ? 'sm:col-span-2' : ''}>
+          <div key={f.k} className={f.t === 'textarea' || f.t === 'image' ? 'sm:col-span-2 xl:col-span-1' : ''}>
             <Field label={`${f.label}${f.req ? ' *' : ''}`}>
               <FieldInput f={f} value={form[f.k]} depts={depts} experts={experts} onChange={(v) => setForm({ ...form, [f.k]: v })} />
             </Field>
           </div>
         ))}
-        <div className="sm:col-span-2 flex gap-2">
+        <div className="sm:col-span-2 xl:col-span-1 flex gap-2">
           <PrimaryButton type="submit" className="!text-xs">{editId ? 'Save changes' : 'Add item'}</PrimaryButton>
           {editId && <GhostButton type="button" className="!text-xs" onClick={reset}>Cancel</GhostButton>}
         </div>
@@ -199,9 +201,9 @@ function MessagesCard({ notify }) {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
       {['sponsor', 'chairman'].map((role) => (
-        <div key={role} className="p-3 rounded-xl bg-bg-primary border border-border-color space-y-2.5">
+        <div key={role} className="p-4 rounded-2xl bg-bg-primary border border-border-color space-y-3">
           <p className="text-xs font-bold text-text-primary uppercase tracking-wider">
             {role === 'sponsor' ? 'Faculty sponsor' : 'Student chairman'}
           </p>
@@ -234,7 +236,7 @@ export default function ContentSection() {
   }, []);
 
   React.useEffect(() => {
-    api.get('/api/admin/departments/all').then((d) => setDepts(Array.isArray(d) ? d : [])).catch(() => {});
+    api.get('/admin/departments/all').then((d) => setDepts(Array.isArray(d) ? d : [])).catch(() => {});
     Promise.all([
       api.get('/v1/users?role=expert&limit=100').catch(() => ({ items: [] })),
       api.get('/v1/users?role=hod&limit=100').catch(() => ({ items: [] })),

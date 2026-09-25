@@ -18,18 +18,18 @@ function fmtDate(ev) {
 
 function EventRow({ ev, actions }) {
   return (
-    <div className="flex gap-3 p-3 rounded-xl border border-border-color bg-bg-primary">
+    <div className="rounded-2xl border border-border-color bg-bg-primary overflow-hidden flex flex-col card-hover">
       {ev.mainImage || ev.bannerImage ? (
-        <img src={resolveImg(ev.mainImage || ev.bannerImage)} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+        <img src={resolveImg(ev.mainImage || ev.bannerImage)} alt="" className="w-full h-32 object-cover" />
       ) : (
-        <div className="w-16 h-16 rounded-lg bg-bg-elevated flex-shrink-0" />
+        <div className="w-full h-16 bg-bg-elevated" />
       )}
-      <div className="min-w-0 flex-1">
+      <div className="p-4 flex flex-col flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-bold text-text-primary truncate">{ev.title}</p>
+          <p className="text-sm font-bold text-text-primary flex-1 min-w-0 truncate">{ev.title}</p>
           <Badge color={statusColor(ev.workflow?.status)}>{(ev.workflow?.status || 'published').replace(/_/g, ' ')}</Badge>
         </div>
-        <p className="text-[11px] text-text-secondary mt-0.5">
+        <p className="text-[11px] text-text-secondary mt-1">
           {fmtDate(ev)}{ev.timeText ? ` · ${ev.timeText}` : ''} · {ev.venue || ev.location || 'Venue TBA'}
         </p>
         {ev.workflow?.submittedBy?.name && (
@@ -41,7 +41,7 @@ function EventRow({ ev, actions }) {
         {ev.workflow?.reviewNote && (
           <p className="text-[11px] text-text-tertiary mt-0.5 italic">Note: {ev.workflow.reviewNote}</p>
         )}
-        {actions && <div className="flex gap-2 mt-2 flex-wrap">{actions}</div>}
+        {actions && <div className="flex gap-2 mt-3 flex-wrap pt-3 border-t border-border-subtle">{actions}</div>}
       </div>
     </div>
   );
@@ -134,35 +134,39 @@ export default function EventsSection() {
       {view === 'propose' && (
         <Card>
           <SectionTitle hint="Goes to exec + HoD for approval before publishing">Propose an event</SectionTitle>
-          <div className="space-y-3.5">
-            <Field label="Event title *">
-              <TextInput value={form.title} onChange={set('title')} placeholder="Intro to Git & GitHub" />
-            </Field>
-            <ImageField label="Banner image *" value={form.bannerImage} onChange={(v) => setForm({ ...form, bannerImage: v })} />
-            <Field label="Description *">
-              <TextArea rows="3" value={form.description} onChange={set('description')} placeholder="What will attendees learn or build?" />
-            </Field>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <Field label="Date *">
-                <TextInput value={form.date} onChange={set('date')} placeholder="March 10, 2026" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+            <div className="space-y-3.5">
+              <Field label="Event title *">
+                <TextInput value={form.title} onChange={set('title')} placeholder="Intro to Git & GitHub" />
               </Field>
-              <Field label="Time">
-                <TextInput value={form.timeText} onChange={set('timeText')} placeholder="10:00 AM – 12:00 PM" />
+              <Field label="Description *">
+                <TextArea rows="5" value={form.description} onChange={set('description')} placeholder="What will attendees learn or build?" />
               </Field>
-              <Field label="Venue / place *">
-                <TextInput value={form.venue} onChange={set('venue')} placeholder="Seminar Hall, IIIT Una" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <Field label="Date *">
+                  <TextInput value={form.date} onChange={set('date')} placeholder="March 10, 2026" />
+                </Field>
+                <Field label="Time">
+                  <TextInput value={form.timeText} onChange={set('timeText')} placeholder="10:00 AM – 12:00 PM" />
+                </Field>
+                <Field label="Venue / place *">
+                  <TextInput value={form.venue} onChange={set('venue')} placeholder="Seminar Hall, IIIT Una" />
+                </Field>
+              </div>
+              <Field label="Listing">
+                <Select value={form.status} onChange={set('status')}>
+                  <option value="upcoming">Upcoming</option>
+                  <option value="ongoing">Ongoing</option>
+                  <option value="completed">Completed</option>
+                </Select>
               </Field>
+              <div className="flex gap-2">
+                <PrimaryButton disabled={busy} onClick={() => propose(true)}>Submit for review</PrimaryButton>
+                <GhostButton disabled={busy} onClick={() => propose(false)}>Save draft</GhostButton>
+              </div>
             </div>
-            <Field label="Listing">
-              <Select value={form.status} onChange={set('status')}>
-                <option value="upcoming">Upcoming</option>
-                <option value="ongoing">Ongoing</option>
-                <option value="completed">Completed</option>
-              </Select>
-            </Field>
-            <div className="flex gap-2">
-              <PrimaryButton disabled={busy} onClick={() => propose(true)}>Submit for review</PrimaryButton>
-              <GhostButton disabled={busy} onClick={() => propose(false)}>Save draft</GhostButton>
+            <div className="lg:pl-2">
+              <ImageField label="Banner image *" value={form.bannerImage} onChange={(v) => setForm({ ...form, bannerImage: v })} />
             </div>
           </div>
         </Card>
@@ -174,7 +178,7 @@ export default function EventsSection() {
           {mine.length === 0 ? (
             <Empty title="No proposals yet" hint="Propose your first event to get started." />
           ) : (
-            <div className="space-y-2.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {mine.map((ev) => (
                 <EventRow
                   key={ev._id}
@@ -207,7 +211,7 @@ export default function EventsSection() {
           {queue.length === 0 ? (
             <div className="mt-3"><Empty title="Queue is clear" hint="New proposals appear here." /></div>
           ) : (
-            <div className="space-y-2.5 mt-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-3">
               {queue.map((ev) => (
                 <EventRow
                   key={ev._id}

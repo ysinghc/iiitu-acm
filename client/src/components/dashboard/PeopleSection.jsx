@@ -61,7 +61,7 @@ export default function PeopleSection() {
     api.get('/public/interest-groups', { auth: false })
       .then((d) => setGroups(Array.isArray(d) ? d : []))
       .catch(() => {});
-    api.get('/api/admin/departments/all')
+    api.get('/admin/departments/all')
       .then((d) => setDepts(Array.isArray(d) ? d : []))
       .catch(() => {});
   }, [canManage]);
@@ -146,7 +146,7 @@ export default function PeopleSection() {
         {people.length === 0 ? (
           <Empty title="Nobody here" hint="Try a different search." />
         ) : (
-          <div className="divide-y divide-border-subtle">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
             {people.map((p) => (
               <PersonRow
                 key={p._id}
@@ -188,31 +188,36 @@ function PersonRow({ person: p, me, canManage, isExec, experts, groups, depts, e
 
   if (!editing) {
     return (
-      <div className="flex items-center gap-3 py-2.5">
-        <div className="w-8 h-8 rounded-full bg-acm-blue/10 text-acm-blue flex items-center justify-center text-xs font-bold flex-shrink-0">
-          {p.name?.charAt(0)?.toUpperCase()}
+      <div className="p-4 rounded-2xl border border-border-color bg-bg-primary card-hover flex flex-col min-h-[132px]">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-acm-blue/10 text-acm-blue flex items-center justify-center text-sm font-bold flex-shrink-0">
+            {p.name?.charAt(0)?.toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-text-primary truncate">
+              {p.name} {isSelf && <span className="text-[10px] font-semibold text-text-tertiary">(you)</span>}
+            </p>
+            <p className="text-[11px] text-text-secondary truncate">
+              <span className="font-mono font-bold text-acm-blue">{p.userId}</span>
+              {` · ${roleLabel(p.role)}`}
+            </p>
+          </div>
+          {!p.isActive && <Badge color="red">inactive</Badge>}
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-text-primary truncate">
-            {p.name} {isSelf && <span className="text-[10px] text-text-tertiary">(you)</span>}
-          </p>
-          <p className="text-[11px] text-text-secondary">
-            <span className="font-mono font-bold text-acm-blue">{p.userId}</span>
-            {` · ${roleLabel(p.role)}`}{p.department ? ` · ${p.department}` : ''}{p.batch ? ` · ${p.batch}` : ''}
-            {p.interestGroup?.name ? ` · ${p.interestGroup.name}` : ''}
-            {p.mentor?.name ? ` · mentored by ${p.mentor.name} (${p.mentor.userId || ''})` : ''}
-          </p>
-        </div>
-        {!p.isActive && <Badge color="red">inactive</Badge>}
+        <p className="mt-2 text-[11px] text-text-tertiary line-clamp-2 flex-1">
+          {[p.department, p.batch, p.interestGroup?.name, p.mentor?.name ? `mentored by ${p.mentor.name}` : ''].filter(Boolean).join(' · ') || '—'}
+        </p>
         {canManage && !isSelf && (
-          <GhostButton className="!px-3 !py-1 !text-xs" onClick={onEdit}>Manage</GhostButton>
+          <div className="mt-3 pt-3 border-t border-border-subtle">
+            <GhostButton className="!px-3 !py-1 !text-xs" onClick={onEdit}>Manage</GhostButton>
+          </div>
         )}
       </div>
     );
   }
 
   return (
-    <div className="py-3 space-y-2">
+    <div className="p-4 rounded-2xl border border-acm-blue/30 bg-bg-primary space-y-2 md:col-span-2 xl:col-span-3">
       <p className="text-sm font-bold text-text-primary">
         {p.name} <span className="font-mono text-acm-blue">{p.userId}</span>
         <span className="font-normal text-text-secondary"> · {p.email}</span>

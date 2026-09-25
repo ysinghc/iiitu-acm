@@ -67,7 +67,7 @@ export default function Verticals() {
     <div className="flex-1 flex flex-col bg-bg-primary transition-colors duration-300">
       {/* Page Header */}
       <div className="bg-bg-secondary border-b border-border-color">
-        <div className="max-w-6xl mx-auto px-6 md:px-8 py-10 md:py-12">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-10 md:py-12">
           <span className="acm-tag">Verticals</span>
           <h1 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight text-text-primary">
             Departments
@@ -79,7 +79,7 @@ export default function Verticals() {
       </div>
 
       {/* Main Content Area filling remaining space */}
-      <div className="flex-1 max-w-6xl w-full mx-auto px-6 md:px-8 py-8 md:py-12 flex flex-col justify-center">
+      <div className="flex-1 max-w-7xl w-full mx-auto px-6 md:px-8 py-8 md:py-12 flex flex-col justify-center">
         {loading && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <SkeletonCard />
@@ -100,7 +100,7 @@ export default function Verticals() {
         )}
 
         {!loading && !error && departments.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 my-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8 my-auto">
             {departments.map((dept) => {
               const groups = groupsByDept[dept._id] || [];
 

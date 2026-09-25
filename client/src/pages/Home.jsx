@@ -3,31 +3,30 @@ import HeroCarousel from '../components/HeroCarousel';
 import { API } from '../utils/apiURL';
 import { useFocusRefresh } from '../utils/useFocusRefresh';
 
-function MessageCard({ msg, reversed = false }) {
+function MessageCard({ msg }) {
   return (
-    <div className={`bg-card-bg border border-border-color rounded-2xl overflow-hidden flex flex-col md:flex-row ${reversed ? 'md:flex-row-reverse' : ''} card-hover`}>
+    <div className="bg-card-bg border border-border-color rounded-2xl overflow-hidden flex flex-col card-hover h-full">
       {msg.imageUrl && (
-        <div className="w-full md:w-2/5 min-h-[240px] relative flex-shrink-0 bg-bg-elevated overflow-hidden">
+        <div className="h-64 bg-bg-elevated overflow-hidden flex-shrink-0 relative">
           <img
             src={msg.imageUrl}
             alt={msg.name}
             className="w-full h-full object-cover object-top"
-            style={{ minHeight: '240px' }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20" />
         </div>
       )}
-      <div className="p-8 md:p-10 flex flex-col justify-center gap-4 flex-1">
+      <div className="p-7 md:p-8 flex flex-col gap-4 flex-1">
         <div>
           <span className="acm-tag">{msg.role === 'sponsor' ? 'Faculty Sponsor' : 'Student Chairman'}</span>
-          <h2 className="mt-2 text-xl md:text-2xl font-bold text-text-primary tracking-tight leading-snug">
+          <h2 className="mt-2 text-xl font-bold text-text-primary tracking-tight leading-snug">
             {msg.name}
           </h2>
         </div>
-        <p className="text-text-secondary text-sm leading-7 whitespace-pre-line">
+        <p className="text-text-secondary text-sm leading-7 whitespace-pre-line line-clamp-6">
           {msg.content}
         </p>
-        <div className="pt-2 border-t border-border-subtle">
+        <div className="mt-auto pt-4 border-t border-border-subtle">
           <span className="text-[11px] text-text-tertiary">
             {msg.role === 'sponsor' ? 'Indian Institute of Information Technology, Una' : 'IIITU ACM Chapter — 2026–27'}
           </span>
@@ -91,16 +90,20 @@ export default function Home() {
 
       {/* Message Cards */}
       {(sponsorMsg || chairmanMsg) && (
-        <div className="max-w-6xl mx-auto px-6 py-16 space-y-8">
-          <div className="mb-10">
+        <div className="bg-bg-secondary border-t border-border-color">
+          <div className="max-w-7xl mx-auto px-6 md:px-8 py-10 md:py-12">
             <span className="acm-tag">About the Chapter</span>
-            <h2 className="mt-2 text-2xl md:text-3xl font-bold text-text-primary tracking-tight">
+            <h2 className="mt-2 text-3xl md:text-4xl font-bold text-text-primary tracking-tight">
               A Word From Our Leaders
             </h2>
+            <p className="mt-2 text-text-secondary text-sm max-w-md leading-relaxed">
+              Guidance and vision from the faculty and student leadership.
+            </p>
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+              {chairmanMsg && <MessageCard msg={chairmanMsg} />}
+              {sponsorMsg && <MessageCard msg={sponsorMsg} />}
+            </div>
           </div>
-
-          {chairmanMsg && <MessageCard msg={chairmanMsg} reversed />}
-          {sponsorMsg && <MessageCard msg={sponsorMsg} />}
         </div>
       )}
     </div>

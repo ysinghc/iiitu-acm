@@ -46,7 +46,15 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
     const token = getToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
   }
-  const res = await fetch(path.startsWith('http') ? path : `${API}${path}`, {
+  // Guard against a doubled /api prefix: the API base already ends in /api,
+  // so a call-site path of `/api/admin/...` would 404 as /api/api/admin/...
+  let url = path;
+  if (!url.startsWith('http')) {
+    const base = API.replace(/\/+$/, '');
+    if (base.endsWith('/api') && url.startsWith('/api/')) url = url.slice(4);
+    url = `${base}${url}`;
+  }
+  const res = await fetch(url, {
     method,
     headers,
     credentials: 'include',

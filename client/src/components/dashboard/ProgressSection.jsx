@@ -122,7 +122,7 @@ function Reports({ ctx }) {
               <TextInput type="month" value={form.month} onChange={(e) => setForm({ ...form, month: e.target.value })} />
             </Field>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
             {form.weeks.map((w, i) => (
               <div key={i} className="p-3 rounded-xl border border-border-color bg-bg-primary space-y-2">
                 <p className="text-xs font-bold text-text-primary">Week {i + 1}</p>
@@ -148,13 +148,14 @@ function Reports({ ctx }) {
       {items.length === 0 ? (
         <Empty title="No reports" hint="Filter by a different month, or file a new report." />
       ) : (
-        items.map((r) => {
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+        {items.map((r) => {
           const open = openId === r._id;
           const mine = String(r.student?._id || r.student) === String(user._id);
           const hodScope = user.role === 'hod' && user.department === r.department;
           const execScope = ['chair', 'vice_chair', 'secretary', 'treasurer'].includes(user.role);
           return (
-            <Card key={r._id} className="!p-4">
+            <Card key={r._id} className={`!p-4 ${open ? 'xl:col-span-2' : ''}`}>
               <button onClick={() => setOpenId(open ? null : r._id)} className="w-full text-left">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm font-bold text-text-primary">{r.student?.name || 'Student'}</p>
@@ -170,7 +171,7 @@ function Reports({ ctx }) {
 
               {open && (
                 <div className="mt-3 pt-3 border-t border-border-subtle">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
                     {r.weeks.map((w, i) => (
                       <div key={i} className="p-2.5 rounded-lg bg-bg-primary border border-border-color">
                         <p className="text-[11px] font-bold text-text-primary">W{i + 1} · {w.kpiScore ?? '–'}/100</p>
@@ -213,7 +214,8 @@ function Reports({ ctx }) {
               )}
             </Card>
           );
-        })
+        })}
+        </div>
       )}
     </div>
   );
@@ -289,14 +291,15 @@ function Summaries({ ctx }) {
       {items.length === 0 ? (
         <Empty title="No summaries" hint="Month-end accomplishments appear here." />
       ) : (
-        items.map((s) => {
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+        {items.map((s) => {
           const open = openId === s._id;
           const mine = String(s.student?._id || s.student) === String(user._id);
           const hodScope = user.role === 'hod' && user.department === s.department;
           const execScope = ['chair', 'vice_chair', 'secretary', 'treasurer'].includes(user.role);
           const mentorScope = user.role === 'expert' && String(s.mentor?._id || s.mentor) === String(user._id);
           return (
-            <Card key={s._id} className="!p-4">
+            <Card key={s._id} className={`!p-4 ${open ? 'xl:col-span-2' : ''}`}>
               <button onClick={() => setOpenId(open ? null : s._id)} className="w-full text-left">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm font-bold text-text-primary">{s.student?.name || 'Student'}</p>
@@ -351,7 +354,8 @@ function Summaries({ ctx }) {
               )}
             </Card>
           );
-        })
+        })}
+        </div>
       )}
     </div>
   );

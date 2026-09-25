@@ -140,6 +140,41 @@ export function Spinner({ label = 'Loading…' }) {
   );
 }
 
+/**
+ * Public-site page chrome — mirrors the Verticals page so every tab
+ * shares one visual language: a full-bleed band header (kicker + title
+ * + description + optional action) over a wide, airy content area.
+ */
+export function SiteHeader({ kicker, title, desc, action, children }) {
+  return (
+    <div className="bg-bg-secondary border-b border-border-color">
+      <div className="max-w-7xl mx-auto px-6 md:px-8 py-10 md:py-12">
+        {kicker && <span className="acm-tag">{kicker}</span>}
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            {title && (
+              <h1 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight text-text-primary">{title}</h1>
+            )}
+            {desc && (
+              <p className="mt-2 text-text-secondary text-sm max-w-md leading-relaxed">{desc}</p>
+            )}
+          </div>
+          {action}
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function SiteBody({ children, className = '' }) {
+  return (
+    <div className={`flex-1 max-w-7xl w-full mx-auto px-6 md:px-8 py-8 md:py-12 ${className}`}>
+      {children}
+    </div>
+  );
+}
+
 export function ErrorNote({ message }) {
   if (!message) return null;
   return (
